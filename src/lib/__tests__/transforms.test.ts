@@ -437,6 +437,47 @@ describe("transformClinicExplorer", () => {
       // Uses the highest transfer count seen.
       expect(result[0].numTransfers).toBe(80);
     });
+
+    it("keeps the first (higher) transfer count when a later record has fewer transfers", () => {
+      // Exercises the false-branch of `if (transfers > existing.numTransfers)`.
+      const records = [
+        makeRecord({
+          locationabbr: "OR",
+          facilityname: "Descending Clinic",
+          data_value: "50.0",
+          question: "Live births per transfer (fresh embryos from own eggs)",
+          num_transfers: "100",
+        }),
+        makeRecord({
+          locationabbr: "OR",
+          facilityname: "Descending Clinic",
+          data_value: "60.0",
+          question: "Live births per transfer (frozen embryos from own eggs)",
+          num_transfers: "40",
+        }),
+      ];
+      const result = transformClinicExplorer(records, { state: "OR" });
+      expect(result).toHaveLength(1);
+      // numTransfers should remain 100, not drop to 40.
+      expect(result[0].numTransfers).toBe(100);
+      expect(result[0].livebirthRate).toBe(55.0);
+    });
+
+    it("treats a missing num_transfers field as 0 transfers", () => {
+      // Exercises the `rec.num_transfers ? ... : 0` fallback branch.
+      const records = [
+        makeRecord({
+          locationabbr: "OR",
+          facilityname: "No Transfer Count Clinic",
+          data_value: "45.0",
+          question: "Live births per transfer (fresh embryos from own eggs)",
+          num_transfers: undefined,
+        }),
+      ];
+      const result = transformClinicExplorer(records, { state: "OR" });
+      expect(result).toHaveLength(1);
+      expect(result[0].numTransfers).toBe(0);
+    });
   });
 
   describe("empty input", () => {
