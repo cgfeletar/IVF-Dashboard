@@ -34,7 +34,8 @@ function parseRate(raw: string | undefined): number | null {
 }
 
 /** Normalise a CDC age-bracket string to one of the five canonical brackets. */
-function normaliseAgeBracket(breakout: string): AgeBracket | null {
+function normaliseAgeBracket(breakout: string | undefined): AgeBracket | null {
+  if (!breakout) return null;
   const trimmed = breakout.trim();
   if ((AGE_BRACKETS as readonly string[]).includes(trimmed)) {
     return trimmed as AgeBracket;

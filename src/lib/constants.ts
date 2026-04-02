@@ -16,3 +16,19 @@ export const NIVO_THEME = {
 
 export const AGE_BRACKETS = ["<35", "35-37", "38-40", "41-42", ">42"] as const;
 export type AgeBracket = (typeof AGE_BRACKETS)[number];
+
+export const YEARS = ["2019", "2020", "2021", "2022"] as const;
+export type Year = (typeof YEARS)[number];
+
+export const US_STATES = [
+  { abbr: "AZ", label: "Arizona" },
+  { abbr: "CA", label: "California" },
+  { abbr: "CO", label: "Colorado" },
+  { abbr: "FL", label: "Florida" },
+  { abbr: "IL", label: "Illinois" },
+  { abbr: "MA", label: "Massachusetts" },
+  { abbr: "NY", label: "New York" },
+  { abbr: "OR", label: "Oregon" },
+  { abbr: "TX", label: "Texas" },
+  { abbr: "WA", label: "Washington" },
+] as const;
