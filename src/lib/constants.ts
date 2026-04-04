@@ -14,11 +14,25 @@ export const NIVO_THEME = {
   axis: { ticks: { line: { stroke: "#CCCCCC" } } },
 } as const;
 
-export const AGE_BRACKETS = ["<35", "35-37", "38-40", "41-42", ">42"] as const;
+export const AGE_BRACKETS = ["<35", "35-37", "38-40", ">40"] as const;
 export type AgeBracket = (typeof AGE_BRACKETS)[number];
 
-export const YEARS = ["2019", "2020", "2021", "2022"] as const;
+export const YEARS = ["2020", "2021", "2022"] as const;
 export type Year = (typeof YEARS)[number];
+
+/** CDC Summary dataset resource IDs — each year is a separate dataset. */
+export const CDC_SUMMARY_DATASETS: Record<Year, string> = {
+  "2020": "4yy2-qa9v",
+  "2021": "24w5-nppr",
+  "2022": "9tjt-seye",
+};
+
+/** One color per year for multi-year charts. */
+export const YEAR_COLORS: Record<Year, string> = {
+  "2020": "#A8B4BE",
+  "2021": "#5B7FA6",
+  "2022": "#C05E3C",
+};
 
 export const US_STATES = [
   { abbr: "AZ", label: "Arizona" },

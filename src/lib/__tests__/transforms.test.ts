@@ -247,18 +247,11 @@ describe("transformSuccessRatesByAge", () => {
       expect(bracket["Own Eggs"]).toBe(28.0);
     });
 
-    it("maps '41 to 42' to '41-42'", () => {
-      const records = [makeRecord({ breakout: "41 to 42", data_value: "22.0" })];
+    it("maps 'Over 40' to '>40'", () => {
+      const records = [makeRecord({ breakout: "Over 40", data_value: "22.0" })];
       const result = transformSuccessRatesByAge(records);
-      const bracket = result.find((d) => d.ageGroup === "41-42")!;
+      const bracket = result.find((d) => d.ageGroup === ">40")!;
       expect(bracket["Own Eggs"]).toBe(22.0);
-    });
-
-    it("maps 'Over 42' to '>42'", () => {
-      const records = [makeRecord({ breakout: "Over 42", data_value: "18.0" })];
-      const result = transformSuccessRatesByAge(records);
-      const bracket = result.find((d) => d.ageGroup === ">42")!;
-      expect(bracket["Own Eggs"]).toBe(18.0);
     });
 
     it("ignores records with unrecognised age brackets", () => {

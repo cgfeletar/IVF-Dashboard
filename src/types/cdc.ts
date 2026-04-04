@@ -8,9 +8,9 @@ export type CdcArtRecord = {
   facilityname: string;
   /**
    * Age group breakout — one of the five CDC age brackets:
-   * "<35" | "35-37" | "38-40" | "41-42" | ">42"
+   * "<35" | "35-37" | "38-40" | ">40"
    */
-  breakout: string;
+  breakout?: string;
   /**
    * Success rate as a numeric string (percentage, e.g. "42.5").
    * May be undefined/empty when suppressed for small sample sizes.

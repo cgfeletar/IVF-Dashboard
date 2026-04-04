@@ -1,14 +1,11 @@
 /**
  * SuccessRatesByAge
- * Classification: WRITE NEW (from analysis report)
- * Analyst ref: n/a — first chart component in the project
  *
- * Renders a grouped bar chart of IVF live birth rates by age bracket.
- * Owns local UI state for year and egg-source filter; all data fetching
- * and transformation is delegated to useCdcArtData and transformSuccessRatesByAge.
+ * Renders a grouped bar chart of IVF success rates by age bracket,
+ * with the most recent 3 years shown side by side in different colors.
  */
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { ResponsiveBar } from "@nivo/bar";
 import {
   Card,
@@ -17,42 +14,18 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCdcArtData } from "@/hooks/useCdcArtData";
-import { transformSuccessRatesByAge } from "@/lib/transforms";
-import { CHART_COLORS, NIVO_THEME, YEARS } from "@/lib/constants";
-import type { Year } from "@/lib/constants";
-import type { SuccessRatesOptions } from "@/lib/transforms";
+import { useCdcArtMultiYear } from "@/hooks/useCdcArtData";
+import { transformSuccessRatesByAgeMultiYear } from "@/lib/transforms";
+import { NIVO_THEME, YEARS, YEAR_COLORS } from "@/lib/constants";
 import type { SuccessRateBarDatum } from "@/types/charts";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type EggSource = SuccessRatesOptions["eggSource"];
-
-// Series label order matches the visual stacking / grouping order.
-const SERIES_OWN = "Own Eggs";
-const SERIES_DONOR = "Donor Eggs";
-
-// Nivo requires colors keyed by series label when using a color mapping.
-const BAR_COLORS: Record<string, string> = {
-  [SERIES_OWN]: CHART_COLORS.primary,
-  [SERIES_DONOR]: CHART_COLORS.secondary,
-};
+const YEAR_KEYS = YEARS.map(String);
 
 // ---------------------------------------------------------------------------
-// Skeleton — matches the chart area dimensions during loading
+// Skeleton
 // ---------------------------------------------------------------------------
 
-function ChartSkeleton(): JSX.Element {
+function ChartSkeleton() {
   return (
     <div
       className="h-[350px] w-full animate-pulse rounded-md bg-muted"
@@ -69,7 +42,7 @@ interface ErrorStateProps {
   onRetry: () => void;
 }
 
-function ErrorState({ onRetry }: ErrorStateProps): JSX.Element {
+function ErrorState({ onRetry }: ErrorStateProps) {
   return (
     <div
       className="flex h-[350px] flex-col items-center justify-center gap-3 text-center"
@@ -93,18 +66,13 @@ function ErrorState({ onRetry }: ErrorStateProps): JSX.Element {
 // Empty state
 // ---------------------------------------------------------------------------
 
-function EmptyState(): JSX.Element {
+function EmptyState() {
   return (
     <div
       className="flex h-[350px] flex-col items-center justify-center gap-2 text-center"
       aria-live="polite"
     >
-      <p className="text-sm text-muted-foreground">
-        No data available for the selected year and egg source.
-      </p>
-      <p className="text-xs text-muted-foreground">
-        Try selecting a different year or toggling between own and donor eggs.
-      </p>
+      <p className="text-sm text-muted-foreground">No data available.</p>
     </div>
   );
 }
@@ -113,93 +81,48 @@ function EmptyState(): JSX.Element {
 // Main component
 // ---------------------------------------------------------------------------
 
-interface SuccessRatesByAgeProps {
-  initialYear?: Year;
-}
+export function SuccessRatesByAge() {
+  const { data, isLoading, isError, refetch } = useCdcArtMultiYear(YEARS);
 
-export function SuccessRatesByAge({ initialYear = "2022" }: SuccessRatesByAgeProps = {}): JSX.Element {
-  const [year, setYear] = useState<Year>(initialYear);
-  const [eggSource, setEggSource] = useState<EggSource>("own");
-
-  const { data, isLoading, isError, refetch } = useCdcArtData({ year });
+  console.log("data", data?.slice(0, 5));
 
   const chartData: SuccessRateBarDatum[] = useMemo(() => {
     if (!data) return [];
-    return transformSuccessRatesByAge(data, { eggSource });
-  }, [data, eggSource]);
+    return transformSuccessRatesByAgeMultiYear(data);
+  }, [data]);
 
-  // Derive the active series keys for Nivo's `keys` prop.
-  const seriesKeys: string[] = useMemo(() => {
-    if (eggSource === "own") return [SERIES_OWN];
-    if (eggSource === "donor") return [SERIES_DONOR];
-    return [SERIES_OWN, SERIES_DONOR];
-  }, [eggSource]);
-
-  // Check whether the transformed data has any non-zero values to render.
   const hasData = useMemo(
     () =>
       chartData.some((datum) =>
-        seriesKeys.some((key) => typeof datum[key] === "number" && datum[key] > 0)
+        YEAR_KEYS.some(
+          (key) => typeof datum[key] === "number" && datum[key] > 0,
+        ),
       ),
-    [chartData, seriesKeys]
+    [chartData],
   );
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <CardTitle>IVF Success Rates by Age</CardTitle>
-            <CardDescription>
-              Live birth rate per transfer (%) — CDC national data
-            </CardDescription>
-          </div>
-
-          {/* Controls */}
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Year selector */}
-            <label className="sr-only" htmlFor="year-select">
-              Year
-            </label>
-            <Select
-              value={year}
-              onValueChange={(v: string) => setYear(v as Year)}
-            >
-              <SelectTrigger id="year-select" size="sm" className="w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {YEARS.map((y) => (
-                  <SelectItem key={y} value={y}>
-                    {y}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Egg source toggle */}
-            <Tabs
-              value={eggSource}
-              onValueChange={(v: string) => setEggSource(v as EggSource)}
-            >
-              <TabsList>
-                <TabsTrigger value="own">Own Eggs</TabsTrigger>
-                <TabsTrigger value="donor">Donor Eggs</TabsTrigger>
-                <TabsTrigger value="both">Both</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-        </div>
+        <CardTitle>IVF Success Rates by Age</CardTitle>
+        <CardDescription>
+          National averages for patients using their own eggs — CDC {YEARS[0]}–
+          {YEARS[YEARS.length - 1]} data
+        </CardDescription>
       </CardHeader>
 
       <CardContent>
         {isLoading && (
-          <div aria-busy="true" aria-live="polite" aria-label="Loading chart data">
+          <div
+            aria-busy="true"
+            aria-live="polite"
+            aria-label="Loading chart data"
+          >
             <ChartSkeleton />
           </div>
         )}
 
-        {isError && <ErrorState onRetry={() => void refetch()} />}
+        {isError && <ErrorState onRetry={refetch} />}
 
         {!isLoading && !isError && !hasData && <EmptyState />}
 
@@ -207,13 +130,15 @@ export function SuccessRatesByAge({ initialYear = "2022" }: SuccessRatesByAgePro
           <div style={{ height: 350 }}>
             <ResponsiveBar
               data={chartData}
-              keys={seriesKeys}
+              keys={YEAR_KEYS}
               indexBy="ageGroup"
-              groupMode={eggSource === "both" ? "grouped" : "stacked"}
+              groupMode="grouped"
               margin={{ top: 16, right: 16, bottom: 48, left: 52 }}
-              padding={0.3}
-              innerPadding={eggSource === "both" ? 3 : 0}
-              colors={(bar) => BAR_COLORS[bar.id as string] ?? CHART_COLORS.muted}
+              padding={0.25}
+              innerPadding={2}
+              colors={(bar) =>
+                YEAR_COLORS[bar.id as keyof typeof YEAR_COLORS] ?? "#999"
+              }
               theme={NIVO_THEME}
               axisBottom={{
                 tickSize: 0,
@@ -226,13 +151,26 @@ export function SuccessRatesByAge({ initialYear = "2022" }: SuccessRatesByAgePro
                 tickSize: 0,
                 tickPadding: 8,
                 tickValues: 5,
-                legend: "Live birth rate (%)",
+                legend: "Success rate (%)",
                 legendPosition: "middle",
                 legendOffset: -44,
                 format: (v) => `${v}%`,
               }}
               enableLabel={false}
               enableGridX={false}
+              legends={[
+                {
+                  dataFrom: "keys",
+                  anchor: "top-right",
+                  direction: "row",
+                  translateY: -16,
+                  itemWidth: 60,
+                  itemHeight: 16,
+                  itemTextColor: "#666",
+                  symbolSize: 10,
+                  symbolShape: "circle",
+                },
+              ]}
               tooltip={({ id, value, indexValue }) => (
                 <div className="rounded-md bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md ring-1 ring-foreground/10">
                   <span className="font-medium">{indexValue}</span>
@@ -243,7 +181,7 @@ export function SuccessRatesByAge({ initialYear = "2022" }: SuccessRatesByAgePro
                 </div>
               )}
               role="img"
-              ariaLabel="Grouped bar chart showing IVF live birth rates by age group"
+              ariaLabel="Grouped bar chart showing IVF success rates by age group across years"
               barAriaLabel={(e) =>
                 `${String(e.id)}, age group ${String(e.indexValue)}: ${String(e.value)}%`
               }

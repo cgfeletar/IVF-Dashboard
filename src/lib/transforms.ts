@@ -33,20 +33,26 @@ function parseRate(raw: string | undefined): number | null {
   return isNaN(n) ? null : n;
 }
 
-/** Normalise a CDC age-bracket string to one of the five canonical brackets. */
+/** True when the question field describes a percentage rate (not a count). */
+function isRateQuestion(question: string | undefined): boolean {
+  if (!question) return false;
+  const q = question.toLowerCase();
+  return q.includes("percentage") || q.includes("rate");
+}
+
+/** Normalise a CDC age-bracket string to one of the canonical brackets. */
 function normaliseAgeBracket(breakout: string | undefined): AgeBracket | null {
   if (!breakout) return null;
   const trimmed = breakout.trim();
   if ((AGE_BRACKETS as readonly string[]).includes(trimmed)) {
     return trimmed as AgeBracket;
   }
-  // Some API responses use "Under 35" or "Over 42" — map them defensively.
+  // Some API responses use alternate labels — map them defensively.
   const lower = trimmed.toLowerCase();
   if (lower === "under 35" || lower === "< 35") return "<35";
   if (lower === "35 to 37" || lower === "35–37") return "35-37";
   if (lower === "38 to 40" || lower === "38–40") return "38-40";
-  if (lower === "41 to 42" || lower === "41–42") return "41-42";
-  if (lower === "over 42" || lower === "> 42") return ">42";
+  if (lower === "over 40" || lower === "> 40") return ">40";
   return null;
 }
 
@@ -82,19 +88,27 @@ export function transformSuccessRatesByAge(
   const { eggSource, seriesLabel } = options;
 
   // Decide which records to keep and what label to give each series.
-  function labelFor(question: string): string | null {
-    const q = question.toLowerCase();
+  // The egg-source info lives in `subtopic`, not `question`.
+  function labelFor(rec: CdcArtRecord): string | null {
+    const s = (rec.subtopic ?? "").toLowerCase();
+    const q = (rec.question ?? "").toLowerCase();
+    const text = `${s} ${q}`;
+
+    const isOwn =
+      text.includes("own egg") || text.includes("own-egg") || text.includes("their own");
+    const isDonor = text.includes("donor");
+
     if (eggSource === "own") {
-      if (!q.includes("own egg") && !q.includes("own-egg")) return null;
+      if (!isOwn) return null;
       return seriesLabel ?? "Own Eggs";
     }
     if (eggSource === "donor") {
-      if (!q.includes("donor")) return null;
+      if (!isDonor) return null;
       return seriesLabel ?? "Donor Eggs";
     }
     // "both" — assign label by content
-    if (q.includes("donor")) return "Donor Eggs";
-    if (q.includes("own egg") || q.includes("own-egg")) return "Own Eggs";
+    if (isDonor) return "Donor Eggs";
+    if (isOwn) return "Own Eggs";
     return null;
   }
 
@@ -107,13 +121,15 @@ export function transformSuccessRatesByAge(
   }
 
   for (const rec of records) {
+    if (!isRateQuestion(rec.question)) continue;
+
     const rate = parseRate(rec.data_value);
     if (rate === null) continue;
 
     const age = normaliseAgeBracket(rec.breakout);
     if (age === null) continue;
 
-    const label = labelFor(rec.question);
+    const label = labelFor(rec);
     if (label === null) continue;
 
     if (!acc[age][label]) {
@@ -127,6 +143,53 @@ export function transformSuccessRatesByAge(
     const datum: SuccessRateBarDatum = { ageGroup: age };
     for (const [series, { sum, count }] of Object.entries(acc[age])) {
       datum[series] = parseFloat((sum / count).toFixed(1));
+    }
+    return datum;
+  });
+}
+
+/**
+ * Multi-year variant: takes an array of { year, records } and produces
+ * grouped-bar data where each series key is a year (e.g. "2020", "2021", "2022").
+ * Averages own-egg success rates per age bracket per year.
+ */
+export function transformSuccessRatesByAgeMultiYear(
+  yearData: Array<{ year: string; records: CdcArtRecord[] }>,
+): SuccessRateBarDatum[] {
+  // acc[ageBracket][year] = { sum, count }
+  type Acc = Record<string, Record<string, { sum: number; count: number }>>;
+  const acc: Acc = {};
+  for (const age of AGE_BRACKETS) {
+    acc[age] = {};
+  }
+
+  for (const { year, records } of yearData) {
+    for (const rec of records) {
+      if (!isRateQuestion(rec.question)) continue;
+
+      const text = `${(rec.subtopic ?? "").toLowerCase()} ${(rec.question ?? "").toLowerCase()}`;
+      const isOwn =
+        text.includes("own egg") || text.includes("own-egg") || text.includes("their own");
+      if (!isOwn) continue;
+
+      const rate = parseRate(rec.data_value);
+      if (rate === null) continue;
+
+      const age = normaliseAgeBracket(rec.breakout);
+      if (age === null) continue;
+
+      if (!acc[age][year]) {
+        acc[age][year] = { sum: 0, count: 0 };
+      }
+      acc[age][year].sum += rate;
+      acc[age][year].count += 1;
+    }
+  }
+
+  return AGE_BRACKETS.map((age) => {
+    const datum: SuccessRateBarDatum = { ageGroup: age };
+    for (const [year, { sum, count }] of Object.entries(acc[age])) {
+      datum[year] = parseFloat((sum / count).toFixed(1));
     }
     return datum;
   });
