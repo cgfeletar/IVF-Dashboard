@@ -28,7 +28,7 @@ const YEAR_KEYS = YEARS.map(String);
 function ChartSkeleton() {
   return (
     <div
-      className="h-[350px] w-full animate-pulse rounded-md bg-muted"
+      className="h-[350px] w-full rounded-md skeleton-shimmer"
       aria-hidden="true"
     />
   );
@@ -84,8 +84,6 @@ function EmptyState() {
 export function SuccessRatesByAge() {
   const { data, isLoading, isError, refetch } = useCdcArtMultiYear(YEARS);
 
-  console.log("data", data?.slice(0, 5));
-
   const chartData: SuccessRateBarDatum[] = useMemo(() => {
     if (!data) return [];
     return transformSuccessRatesByAgeMultiYear(data);
@@ -104,7 +102,9 @@ export function SuccessRatesByAge() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>IVF Success Rates by Age</CardTitle>
+        <CardTitle className="tracking-tight">
+          IVF Success Rates by Age
+        </CardTitle>
         <CardDescription>
           National averages for patients using their own eggs — CDC {YEARS[0]}–
           {YEARS[YEARS.length - 1]} data

@@ -64,7 +64,7 @@ function LoadingSkeleton(): React.ReactElement {
       {Array.from({ length: 6 }, (_, i) => (
         <div
           key={i}
-          className="h-8 animate-pulse rounded-md bg-muted"
+          className="h-8 rounded-md skeleton-shimmer"
           style={{ width: `${65 + (i % 3) * 10}%` }}
         />
       ))}
@@ -200,7 +200,7 @@ export function ClinicExplorer({ initialState = DEFAULT_STATE }: ClinicExplorerP
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Clinic Explorer</CardTitle>
+        <CardTitle className="tracking-tight">Clinic Explorer</CardTitle>
         <CardDescription>
           Top clinics by live birth rate per transfer. CDC NASS data.
         </CardDescription>

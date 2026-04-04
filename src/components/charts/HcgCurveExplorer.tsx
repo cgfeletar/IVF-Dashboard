@@ -218,7 +218,7 @@ export function HcgCurveExplorer() {
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <CardTitle>hCG Curve Explorer</CardTitle>
+            <CardTitle className="tracking-tight">hCG Curve Explorer</CardTitle>
             <CardDescription>
               Betabase reference ranges (5th–95th percentile) by days past
               ovulation

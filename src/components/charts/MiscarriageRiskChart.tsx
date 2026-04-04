@@ -228,7 +228,7 @@ export function MiscarriageRiskChart(): React.ReactElement {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Miscarriage Risk by Gestational Age</CardTitle>
+        <CardTitle className="tracking-tight">Miscarriage Risk by Gestational Age</CardTitle>
         <CardDescription>
           Cumulative risk from each gestational week to 20 weeks, based on your
           profile. The curve shows how risk decreases as your pregnancy
@@ -341,7 +341,7 @@ export function MiscarriageRiskChart(): React.ReactElement {
           <div
             className={cn(
               "flex flex-wrap items-center gap-3 rounded-lg px-4 py-3 text-sm",
-              "border border-[#5A8A6A]/20 bg-[#5A8A6A]/8"
+              "border border-[#5E9E96]/20 bg-[#5E9E96]/8"
             )}
             role="status"
             aria-live="polite"
@@ -351,7 +351,7 @@ export function MiscarriageRiskChart(): React.ReactElement {
             </span>
             <Badge
               variant="outline"
-              className="border-[#5A8A6A]/40 text-[#5A8A6A]"
+              className="border-[#5E9E96]/40 text-[#5E9E96]"
             >
               {currentWeekMetrics.currentRiskPct}% remaining risk
             </Badge>

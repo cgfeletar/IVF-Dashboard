@@ -19,8 +19,10 @@ import type {
   ClinicBarDatum,
   NivoLineSeries,
   MiscarriageRiskDatum,
+  DpoBarDatum,
 } from "@/types/charts";
 import type { HcgDataPoint } from "@/lib/hcgData";
+import type { DpoDataPoint } from "@/lib/dpoData";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -361,4 +363,25 @@ export function transformMiscarriageRiskCurve(
       data: data.map((d) => ({ x: d.week, y: d.risk })),
     },
   ];
+}
+
+// ---------------------------------------------------------------------------
+// Panel 5 — DPO Test Accuracy (diverging bar)
+// ---------------------------------------------------------------------------
+
+/**
+ * Transform DPO data points into a diverging bar shape for Nivo.
+ *
+ * False-negative values are negated so bars extend left of center.
+ * The `dpo` field is stringified for use as the Nivo index key.
+ */
+export function transformDpoTestAccuracy(
+  dataPoints: DpoDataPoint[],
+): DpoBarDatum[] {
+  return dataPoints.map((p) => ({
+    dpo: `${p.dpo} DPO`,
+    positive: p.positive,
+    falseNegative: -p.falseNegative,
+    interpolated: !!p.interpolated,
+  }));
 }

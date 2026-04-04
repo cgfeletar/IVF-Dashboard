@@ -1,9 +1,16 @@
+/** Core palette — teal dominant, dusty rose accent, oat tertiary. */
+export const PALETTE = {
+  teal: "#5E9E96",
+  dustyRose: "#C4877A",
+  oat: "#C4B49A",
+} as const;
+
 export const CHART_COLORS = {
-  primary: "#C05E3C",
-  secondary: "#5B7FA6",
-  muted: "#A8B4BE",
-  positive: "#5A8A6A",
-  range: "rgba(192, 94, 60, 0.15)",
+  primary: PALETTE.teal,
+  secondary: PALETTE.dustyRose,
+  muted: PALETTE.oat,
+  positive: PALETTE.teal,
+  range: "rgba(94, 158, 150, 0.15)",
 } as const;
 
 export const NIVO_THEME = {
@@ -29,9 +36,9 @@ export const CDC_SUMMARY_DATASETS: Record<Year, string> = {
 
 /** One color per year for multi-year charts. */
 export const YEAR_COLORS: Record<Year, string> = {
-  "2020": "#A8B4BE",
-  "2021": "#5B7FA6",
-  "2022": "#C05E3C",
+  "2020": PALETTE.oat,
+  "2021": PALETTE.dustyRose,
+  "2022": PALETTE.teal,
 };
 
 export const US_STATES = [

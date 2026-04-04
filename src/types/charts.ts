@@ -49,6 +49,21 @@ export type NivoLineSeries = {
 };
 
 // ---------------------------------------------------------------------------
+// Panel 5 — DPO Test Accuracy (diverging bar)
+// ---------------------------------------------------------------------------
+
+/** One row in the DPO diverging bar chart */
+export type DpoBarDatum = {
+  dpo: string;
+  /** Positive % (shown right of center) */
+  positive: number;
+  /** False negative % as negative value (shown left of center) */
+  falseNegative: number;
+  /** Whether this data point is interpolated */
+  interpolated: boolean;
+};
+
+// ---------------------------------------------------------------------------
 // Panel 4 — Miscarriage Risk (area line)
 // ---------------------------------------------------------------------------
 
