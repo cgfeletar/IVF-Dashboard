@@ -52,5 +52,15 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    /** Register data-attribute variants used by @base-ui/react components. */
+    function ({ addVariant }) {
+      addVariant("data-active", "&[data-active]");
+      addVariant("data-horizontal", "&[data-orientation='horizontal']");
+      addVariant("data-vertical", "&[data-orientation='vertical']");
+      addVariant("group-data-horizontal/tabs", ":merge(.group\\/tabs)[data-orientation='horizontal'] &");
+      addVariant("group-data-vertical/tabs", ":merge(.group\\/tabs)[data-orientation='vertical'] &");
+    },
+  ],
 }

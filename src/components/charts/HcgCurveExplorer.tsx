@@ -16,12 +16,11 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Toggle } from "@/components/ui/toggle";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { HCG_DATA } from "@/lib/hcgData";
-import { transformHcgCurve, transformUserBeta } from "@/lib/transforms";
+import { transformHcgCurve } from "@/lib/transforms";
 import type { HcgSeriesFilter } from "@/lib/transforms";
 import { CHART_COLORS, NIVO_THEME } from "@/lib/constants";
 import type { NivoLineSeries } from "@/types/charts";
@@ -89,15 +88,31 @@ function ConfidenceBandLayer({ series, xScale, yScale }: CustomLayerProps) {
 }
 
 // ---------------------------------------------------------------------------
+// Doubling time helper
+// ---------------------------------------------------------------------------
+
+/** Calculate hCG doubling time in hours between two beta readings. */
+function formatDoublingTime(
+  earlier: { dpo: number; value: number },
+  later: { dpo: number; value: number },
+): string {
+  const hoursBetween = (later.dpo - earlier.dpo) * 24;
+  if (hoursBetween <= 0 || later.value <= 0 || earlier.value <= 0) return "N/A";
+  if (later.value <= earlier.value) return "Not rising";
+  const doublingHours =
+    (hoursBetween * Math.log(2)) / Math.log(later.value / earlier.value);
+  return `${doublingHours.toFixed(1)} hours`;
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
 export function HcgCurveExplorer() {
   const [filter, setFilter] = useState<HcgSeriesFilter>("singleton");
-  const [logScale, setLogScale] = useState(false);
   const [dpoInput, setDpoInput] = useState("");
   const [hcgInput, setHcgInput] = useState("");
-  const [userBeta, setUserBeta] = useState<{ dpo: number; value: number } | null>(null);
+  const [userBetas, setUserBetas] = useState<Array<{ dpo: number; value: number }>>([]);
 
   const baseSeries = useMemo(() => transformHcgCurve(HCG_DATA, filter), [filter]);
 
@@ -107,24 +122,57 @@ export function HcgCurveExplorer() {
     [baseSeries]
   );
 
+  const hasBetas = userBetas.length > 0;
+  const maxBetaDpo = hasBetas ? Math.max(...userBetas.map((b) => b.dpo)) : 28;
+  const xMax = hasBetas ? Math.min(maxBetaDpo + 2, 28) : 28;
+
+  // Compute a y-axis max that fits the visible data within the zoomed x range.
+  const yMax = useMemo(() => {
+    if (!hasBetas) return undefined;
+    let max = Math.max(...userBetas.map((b) => b.value));
+    for (const s of baseSeries) {
+      for (const pt of s.data) {
+        if ((pt.x as number) <= xMax && (pt.y as number) > max) {
+          max = pt.y as number;
+        }
+      }
+    }
+    return Math.ceil(max * 1.1);
+  }, [baseSeries, userBetas, hasBetas, xMax]);
+
+  // Sort betas by DPO for the line series
+  const sortedBetas = useMemo(
+    () => [...userBetas].sort((a, b) => a.dpo - b.dpo),
+    [userBetas],
+  );
+
   const chartData = useMemo<NivoLineSeries[]>(() => {
     const series = [...baseSeries];
-    if (userBeta) {
-      series.push(transformUserBeta(userBeta.dpo, userBeta.value));
+    if (hasBetas) {
+      series.push({
+        id: "My Beta",
+        data: sortedBetas.map((b) => ({ x: b.dpo, y: b.value })),
+      });
     }
     return series;
-  }, [baseSeries, userBeta]);
+  }, [baseSeries, sortedBetas, hasBetas]);
 
-  const handlePlotBeta = () => {
+  const handleAddBeta = () => {
     const dpo = parseInt(dpoInput, 10);
     const hcg = parseFloat(hcgInput);
-    if (!isNaN(dpo) && !isNaN(hcg) && dpo >= 10 && dpo <= 28 && hcg > 0) {
-      setUserBeta({ dpo, value: hcg });
+    if (!isNaN(dpo) && !isNaN(hcg) && dpo >= 10 && dpo <= 28 && hcg > 0 && userBetas.length < 4) {
+      setUserBetas((prev) => [...prev, { dpo, value: hcg }]);
+      setDpoInput("");
+      setHcgInput("");
     }
   };
 
-  const handleClearBeta = () => {
-    setUserBeta(null);
+  const handleRemoveBeta = (index: number) => {
+    setUserBetas((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleClearBetas = () => {
+    setUserBetas([]);
     setDpoInput("");
     setHcgInput("");
   };
@@ -144,20 +192,26 @@ export function HcgCurveExplorer() {
     return getSeriesColor(series);
   };
 
-  // Custom layer to render the user's beta point (since enablePoints is off globally)
-  const UserBetaPointLayer = ({ series, xScale, yScale }: CustomLayerProps) => {
-    const betaSeries = series.find((s) => s.id === "My Beta");
-    if (!betaSeries || betaSeries.data.length === 0) return null;
-    const point = betaSeries.data[0];
-    if (point.data.x == null || point.data.y == null) return null;
-    const x = (xScale as (v: number) => number)(point.data.x as number);
-    const y = (yScale as (v: number) => number)(point.data.y as number);
-    return (
-      <g>
-        <circle cx={x} cy={y} r={6} fill={CHART_COLORS.positive} stroke="#ffffff" strokeWidth={2} />
-      </g>
-    );
-  };
+  // Custom layer to render the user's beta points (since enablePoints is off globally).
+  // Memoised so Nivo sees a stable function reference across renders.
+  const userBetaPointLayer = useMemo(() => {
+    return function UserBetaPointLayer({ series, xScale, yScale }: CustomLayerProps) {
+      const betaSeries = series.find((s) => s.id === "My Beta");
+      if (!betaSeries || betaSeries.data.length === 0) return null;
+      return (
+        <g>
+          {betaSeries.data.map((point, i) => {
+            if (point.data.x == null || point.data.y == null) return null;
+            const cx = (xScale as (v: number) => number)(point.data.x as number);
+            const cy = (yScale as (v: number) => number)(point.data.y as number);
+            return (
+              <circle key={i} cx={cx} cy={cy} r={6} fill={CHART_COLORS.positive} stroke="#ffffff" strokeWidth={2} />
+            );
+          })}
+        </g>
+      );
+    };
+  }, []);
 
   return (
     <Card>
@@ -183,63 +237,76 @@ export function HcgCurveExplorer() {
               </TabsList>
             </Tabs>
 
-            <Toggle
-              pressed={logScale}
-              onPressedChange={setLogScale}
-              aria-label="Toggle log scale"
-              size="sm"
-              variant="outline"
-            >
-              Log
-            </Toggle>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Plot my beta */}
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="dpo-input" className="text-xs font-medium text-muted-foreground">
-              DPO
-            </label>
-            <Input
-              id="dpo-input"
-              type="number"
-              min={10}
-              max={28}
-              placeholder="14"
-              value={dpoInput}
-              onChange={(e) => setDpoInput(e.target.value)}
-              className="w-20"
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="hcg-input" className="text-xs font-medium text-muted-foreground">
-              hCG (mIU/mL)
-            </label>
-            <Input
-              id="hcg-input"
-              type="number"
-              min={1}
-              placeholder="250"
-              value={hcgInput}
-              onChange={(e) => setHcgInput(e.target.value)}
-              className="w-28"
-            />
-          </div>
-          <Button size="sm" onClick={handlePlotBeta}>
-            Plot my beta
-          </Button>
-          {userBeta && (
-            <>
-              <Badge variant="secondary">
-                DPO {userBeta.dpo}: {userBeta.value.toLocaleString()} mIU/mL
-              </Badge>
-              <Button size="sm" variant="ghost" onClick={handleClearBeta}>
-                Clear
+        {/* Plot my betas — stacked rows */}
+        <div className="space-y-2">
+          {userBetas.map((beta, i) => (
+            <div key={i} className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span className="text-sm">
+                <span className="font-medium text-foreground">DPO {beta.dpo}</span>
+                <span className="text-muted-foreground"> — </span>
+                <span className="font-medium text-foreground">
+                  {beta.value.toLocaleString()} mIU/mL
+                </span>
+              </span>
+              {i > 0 && (
+                <span className="text-sm font-medium text-primary">
+                  Doubling time:{" "}
+                  {formatDoublingTime(userBetas[i - 1], beta)}
+                </span>
+              )}
+              <button
+                onClick={() => handleRemoveBeta(i)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+                aria-label={`Remove beta DPO ${beta.dpo}`}
+              >
+                ×
+              </button>
+            </div>
+          ))}
+
+          {userBetas.length < 4 && (
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="flex flex-col gap-1">
+                <label htmlFor="dpo-input" className="text-xs font-medium text-muted-foreground">
+                  DPO
+                </label>
+                <Input
+                  id="dpo-input"
+                  type="number"
+                  min={10}
+                  max={28}
+                  value={dpoInput}
+                  onChange={(e) => setDpoInput(e.target.value)}
+                  className="w-20"
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor="hcg-input" className="text-xs font-medium text-muted-foreground">
+                  hCG (mIU/mL)
+                </label>
+                <Input
+                  id="hcg-input"
+                  type="number"
+                  min={1}
+                  value={hcgInput}
+                  onChange={(e) => setHcgInput(e.target.value)}
+                  className="w-28"
+                />
+              </div>
+              <Button size="sm" onClick={handleAddBeta}>
+                {hasBetas ? "Add beta" : "Plot my beta"}
               </Button>
-            </>
+              {hasBetas && (
+                <Button size="sm" variant="ghost" onClick={handleClearBetas}>
+                  Clear all
+                </Button>
+              )}
+            </div>
           )}
         </div>
 
@@ -252,12 +319,12 @@ export function HcgCurveExplorer() {
           <ResponsiveLine
             data={chartData}
             margin={{ top: 16, right: 24, bottom: 56, left: 64 }}
-            xScale={{ type: "linear", min: 10, max: 28 }}
-            yScale={
-              logScale
-                ? { type: "log", base: 10, min: "auto", max: "auto" }
-                : { type: "linear", min: 0, max: "auto" }
-            }
+            xScale={{
+              type: "linear",
+              min: 10,
+              max: xMax,
+            }}
+            yScale={{ type: "linear", min: 0, max: yMax ?? "auto" }}
             curve="monotoneX"
             colors={getSeriesColorWithHiding}
             lineWidth={2.5}
@@ -292,7 +359,7 @@ export function HcgCurveExplorer() {
               "axes",
               ConfidenceBandLayer,
               "lines",
-              UserBetaPointLayer,
+              userBetaPointLayer,
               "mesh",
               "legends",
             ]}
