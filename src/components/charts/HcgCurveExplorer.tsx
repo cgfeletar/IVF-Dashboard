@@ -318,7 +318,7 @@ export function HcgCurveExplorer() {
         >
           <ResponsiveLine
             data={chartData}
-            margin={{ top: 16, right: 24, bottom: 56, left: 64 }}
+            margin={{ top: 16, right: 24, bottom: 80, left: 64 }}
             xScale={{
               type: "linear",
               min: 10,
@@ -383,15 +383,23 @@ export function HcgCurveExplorer() {
             }}
             legends={[
               {
-                anchor: "top-left",
-                direction: "column",
-                translateX: 12,
-                translateY: 0,
+                anchor: "bottom-right",
+                direction: "row",
+                translateY: 70,
                 itemWidth: 140,
                 itemHeight: 20,
                 itemTextColor: NIVO_THEME.textColor,
-                symbolSize: 10,
-                symbolShape: "circle",
+                symbolSize: 16,
+                symbolShape: ({ x, y, size, fill }) => (
+                  <rect
+                    x={x}
+                    y={y + size / 2 - 1.5}
+                    width={size}
+                    height={3}
+                    rx={1.5}
+                    fill={fill}
+                  />
+                ),
                 data: medianIds.map((id) => ({
                   id,
                   label: id,

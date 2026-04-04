@@ -92,7 +92,11 @@ function ImplantationAnnotationLayer({
   bars,
   yScale,
 }: {
-  bars: Array<{ data: { indexValue: string | number }; y: number; height: number }>;
+  bars: Array<{
+    data: { indexValue: string | number };
+    y: number;
+    height: number;
+  }>;
   yScale: (value: string) => number;
 }) {
   // Find the bars for 10 DPO and 11 DPO to position the annotation between them
@@ -140,7 +144,9 @@ export function DpoTestAccuracy() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="tracking-tight">Pregnancy Test Accuracy by DPO</CardTitle>
+        <CardTitle className="tracking-tight">
+          Pregnancy Test Accuracy by DPO
+        </CardTitle>
         <CardDescription>
           Likelihood of a true positive vs. false negative result for pregnant
           women testing at each day past ovulation
@@ -155,18 +161,11 @@ export function DpoTestAccuracy() {
             indexBy="dpo"
             layout="horizontal"
             valueScale={{ type: "linear", min: -100, max: 100 }}
-            margin={{ top: 24, right: 24, bottom: 40, left: 96 }}
+            margin={{ top: 24, right: 24, bottom: 64, left: 96 }}
             padding={0.3}
             colors={(bar) => {
               const key = String(bar.id);
-              const dpo = String(bar.indexValue);
               const base = BAR_COLORS[key] ?? "#999";
-              // Slightly desaturate interpolated data points
-              if (INTERPOLATED_DPOS.has(dpo)) {
-                return key === "positive"
-                  ? "#8BB8B1" // lighter teal
-                  : "#D4A89E"; // lighter dusty rose
-              }
               return base;
             }}
             theme={NIVO_THEME}
@@ -177,9 +176,10 @@ export function DpoTestAccuracy() {
               tickPadding: 8,
               tickValues: [-100, -75, -50, -25, 0, 25, 50, 75, 100],
               format: (v) => `${Math.abs(Number(v))}%`,
-              legend: "← False negative          Positive →",
+              legend:
+                "← False Negative\u2003\u2003\u2003\u2003\u2003\u2003Positive →\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003\u2003",
               legendPosition: "middle",
-              legendOffset: 32,
+              legendOffset: 42,
             }}
             axisLeft={{
               tickSize: 0,
@@ -213,9 +213,9 @@ export function DpoTestAccuracy() {
             legends={[
               {
                 dataFrom: "keys",
-                anchor: "top",
+                anchor: "bottom-right",
                 direction: "row",
-                translateY: -20,
+                translateY: 56,
                 itemWidth: 120,
                 itemHeight: 16,
                 itemTextColor: "#666",
@@ -223,14 +223,14 @@ export function DpoTestAccuracy() {
                 symbolShape: "circle",
                 data: [
                   {
-                    id: "positive",
-                    label: "Positive",
-                    color: BAR_COLORS.positive,
-                  },
-                  {
                     id: "falseNegative",
                     label: "False Negative",
                     color: BAR_COLORS.falseNegative,
+                  },
+                  {
+                    id: "positive",
+                    label: "Positive",
+                    color: BAR_COLORS.positive,
                   },
                 ],
               },
@@ -240,8 +240,7 @@ export function DpoTestAccuracy() {
             ariaLabel="Diverging bar chart showing pregnancy test accuracy by days past ovulation"
             barAriaLabel={(e) => {
               const val = Math.abs(Number(e.value));
-              const type =
-                e.id === "positive" ? "positive" : "false negative";
+              const type = e.id === "positive" ? "positive" : "false negative";
               return `${String(e.indexValue)}: ${val}% ${type}`;
             }}
           />

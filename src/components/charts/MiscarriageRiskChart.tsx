@@ -29,7 +29,10 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 
-import { getMiscarriageRisk, getMiscarriageRiskCurve } from "@/lib/miscarriageModel";
+import {
+  getMiscarriageRisk,
+  getMiscarriageRiskCurve,
+} from "@/lib/miscarriageModel";
 import { transformMiscarriageRiskCurve } from "@/lib/transforms";
 import { CHART_COLORS, NIVO_THEME } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -76,10 +79,13 @@ const PRIOR_LIVE_BIRTH_OPTIONS = [
   { value: "1", label: "1+" },
 ] as const;
 
-const WEEK_OPTIONS = Array.from({ length: WEEKS_END - WEEKS_START + 1 }, (_, i) => ({
-  value: String(WEEKS_START + i),
-  label: `Week ${WEEKS_START + i}`,
-}));
+const WEEK_OPTIONS = Array.from(
+  { length: WEEKS_END - WEEKS_START + 1 },
+  (_, i) => ({
+    value: String(WEEKS_START + i),
+    label: `Week ${WEEKS_START + i}`,
+  }),
+);
 
 // ---------------------------------------------------------------------------
 // Custom layer: current-week vertical marker
@@ -205,7 +211,7 @@ export function MiscarriageRiskChart(): React.ReactElement {
     const riskAtCurrentWeek = currentWeekMetrics.riskAtCurrentWeek;
 
     return function CurrentWeekLayer(
-      props: LineCustomSvgLayerProps<RiskSeries>
+      props: LineCustomSvgLayerProps<RiskSeries>,
     ): React.ReactElement | null {
       return (
         <CurrentWeekMarkerLayer
@@ -220,15 +226,36 @@ export function MiscarriageRiskChart(): React.ReactElement {
   const layers = useMemo(
     () =>
       currentWeekLayer
-        ? (["grid", "markers", "axes", "areas", "lines", "points", "mesh", currentWeekLayer, "legends"] as const)
-        : (["grid", "markers", "axes", "areas", "lines", "points", "mesh", "legends"] as const),
-    [currentWeekLayer]
+        ? ([
+            "grid",
+            "markers",
+            "axes",
+            "areas",
+            "lines",
+            "points",
+            "mesh",
+            currentWeekLayer,
+            "legends",
+          ] as const)
+        : ([
+            "grid",
+            "markers",
+            "axes",
+            "areas",
+            "lines",
+            "points",
+            "mesh",
+            "legends",
+          ] as const),
+    [currentWeekLayer],
   );
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="tracking-tight">Miscarriage Risk by Gestational Age</CardTitle>
+        <CardTitle className="tracking-tight">
+          Miscarriage Risk by Gestational Age
+        </CardTitle>
         <CardDescription>
           Cumulative risk from each gestational week to 20 weeks, based on your
           profile. The curve shows how risk decreases as your pregnancy
@@ -241,7 +268,7 @@ export function MiscarriageRiskChart(): React.ReactElement {
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {/* Maternal age slider */}
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-sm font-medium text-foreground">
+            <legend className="text-sm font-medium text-foreground mb-3">
               Maternal age:{" "}
               <span className="font-semibold">{inputs.maternalAge}</span>
             </legend>
@@ -318,7 +345,11 @@ export function MiscarriageRiskChart(): React.ReactElement {
               Mark my current week
             </label>
             <Select
-              value={inputs.currentWeek !== null ? String(inputs.currentWeek) : "none"}
+              value={
+                inputs.currentWeek !== null
+                  ? String(inputs.currentWeek)
+                  : "none"
+              }
               onValueChange={setCurrentWeek}
             >
               <SelectTrigger id="current-week" className="w-full">
@@ -341,13 +372,17 @@ export function MiscarriageRiskChart(): React.ReactElement {
           <div
             className={cn(
               "flex flex-wrap items-center gap-3 rounded-lg px-4 py-3 text-sm",
-              "border border-[#5E9E96]/20 bg-[#5E9E96]/8"
+              "border border-[#5E9E96]/20 bg-[#5E9E96]/8",
             )}
             role="status"
             aria-live="polite"
           >
-            <span className="font-semibold" style={{ color: CHART_COLORS.positive }}>
-              Your risk has dropped {currentWeekMetrics.riskReductionPct}% since week 4
+            <span
+              className="font-semibold"
+              style={{ color: CHART_COLORS.positive }}
+            >
+              Your risk has dropped {currentWeekMetrics.riskReductionPct}% since
+              week 4
             </span>
             <Badge
               variant="outline"
@@ -359,7 +394,11 @@ export function MiscarriageRiskChart(): React.ReactElement {
         )}
 
         {/* Chart */}
-        <div style={{ height: 350 }} role="img" aria-label="Miscarriage risk area chart showing declining risk from gestational week 4 to 20">
+        <div
+          style={{ height: 350 }}
+          role="img"
+          aria-label="Miscarriage risk area chart showing declining risk from gestational week 4 to 20"
+        >
           <ResponsiveLine
             data={chartSeries}
             margin={{ top: 16, right: 24, bottom: 48, left: 52 }}

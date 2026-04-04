@@ -133,7 +133,7 @@ export function SuccessRatesByAge() {
               keys={YEAR_KEYS}
               indexBy="ageGroup"
               groupMode="grouped"
-              margin={{ top: 16, right: 16, bottom: 48, left: 52 }}
+              margin={{ top: 16, right: 16, bottom: 72, left: 52 }}
               padding={0.25}
               innerPadding={2}
               colors={(bar) =>
@@ -161,9 +161,9 @@ export function SuccessRatesByAge() {
               legends={[
                 {
                   dataFrom: "keys",
-                  anchor: "top-right",
+                  anchor: "bottom-right",
                   direction: "row",
-                  translateY: -16,
+                  translateY: 60,
                   itemWidth: 60,
                   itemHeight: 16,
                   itemTextColor: "#666",

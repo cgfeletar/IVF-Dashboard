@@ -1,8 +1,11 @@
 /** Core palette — teal dominant, dusty rose accent, oat tertiary. */
 export const PALETTE = {
   teal: "#5E9E96",
+  tealHover: "#3A6E67",
   dustyRose: "#C4877A",
+  dustyRoseHover: "#8F5248",
   oat: "#C4B49A",
+  oatHover: "#8F7D62",
 } as const;
 
 export const CHART_COLORS = {

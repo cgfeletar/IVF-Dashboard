@@ -1,10 +1,11 @@
-import { DashboardPanel, SectionHeader } from "@/components/dashboard/DashboardPanel";
-import { KpiStrip } from "@/components/dashboard/KpiStrip";
+import { DashboardPanel } from "@/components/dashboard/DashboardPanel";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SuccessRatesByAge } from "@/components/charts/SuccessRatesByAge";
 import { ClinicExplorer } from "@/components/charts/ClinicExplorer";
 import { HcgCurveExplorer } from "@/components/charts/HcgCurveExplorer";
 import { MiscarriageRiskChart } from "@/components/charts/MiscarriageRiskChart";
 import { DpoTestAccuracy } from "@/components/charts/DpoTestAccuracy";
+import { Heart, Baby, Syringe } from "lucide-react";
 
 export default function DashboardPage() {
   return (
@@ -28,56 +29,75 @@ export default function DashboardPage() {
 
       {/* Dashboard content */}
       <main className="mx-auto max-w-7xl space-y-8 px-6 py-8">
-        {/* KPI summary strip */}
-        <KpiStrip />
+        <Tabs defaultValue={0}>
+          <TabsList
+            variant="line"
+            className="w-full border-b border-border/60 gap-0 h-auto p-0"
+          >
+            <TabsTrigger
+              value={0}
+              className="flex-none px-5 py-3 text-base text-muted-foreground/70 data-active:text-primary data-active:font-bold after:h-[2.5px] after:bg-primary after:bottom-[-1px] [&_svg:not([class*='size-'])]:size-5"
+            >
+              <Heart /> Trying to Conceive
+            </TabsTrigger>
+            <TabsTrigger
+              value={1}
+              className="flex-none px-5 py-3 text-base text-muted-foreground/70 data-active:text-primary data-active:font-bold after:h-[2.5px] after:bg-primary after:bottom-[-1px] [&_svg:not([class*='size-'])]:size-5"
+            >
+              <Baby /> Pregnancy
+            </TabsTrigger>
+            <TabsTrigger
+              value={2}
+              className="flex-none px-5 py-3 text-base text-muted-foreground/70 data-active:text-primary data-active:font-bold after:h-[2.5px] after:bg-primary after:bottom-[-1px] [&_svg:not([class*='size-'])]:size-5"
+            >
+              <Syringe /> IVF
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Chart grid */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {/* — National Data ——————————————————————————— */}
-          <SectionHeader
-            title="National Outcomes"
-            description="CDC ART surveillance data across age groups and clinics"
-          />
+          {/* — Trying to Conceive — */}
+          <TabsContent value={0}>
+            <div className="grid grid-cols-1 gap-6 pt-6">
+              <DashboardPanel index={0} className="col-span-1">
+                <DpoTestAccuracy />
+              </DashboardPanel>
+            </div>
+          </TabsContent>
 
-          <DashboardPanel index={0}>
-            <SuccessRatesByAge />
-          </DashboardPanel>
+          {/* — Pregnancy — */}
+          <TabsContent value={1}>
+            <div className="grid grid-cols-1 gap-6 pt-6 lg:grid-cols-2">
+              <DashboardPanel index={0} className="lg:col-span-2">
+                <HcgCurveExplorer />
+              </DashboardPanel>
 
-          <DashboardPanel index={1}>
-            <ClinicExplorer />
-          </DashboardPanel>
+              <DashboardPanel index={1} className="lg:col-span-2">
+                <MiscarriageRiskChart />
+              </DashboardPanel>
+            </div>
+          </TabsContent>
 
-          {/* — Pregnancy Tracking ————————————————————— */}
-          <SectionHeader
-            title="Pregnancy Tracking"
-            description="Reference curves and personalised risk models"
-          />
+          {/* — IVF — */}
+          <TabsContent value={2}>
+            <div className="grid grid-cols-1 gap-6 pt-6 lg:grid-cols-2">
+              <DashboardPanel index={0}>
+                <SuccessRatesByAge />
+              </DashboardPanel>
 
-          <DashboardPanel index={2} className="lg:col-span-2">
-            <HcgCurveExplorer />
-          </DashboardPanel>
-
-          <DashboardPanel index={3}>
-            <MiscarriageRiskChart />
-          </DashboardPanel>
-
-          {/* — Testing ———————————————————————————————— */}
-          <SectionHeader
-            title="Testing"
-            description="When to test and what the results mean"
-          />
-
-          <DashboardPanel index={4} className="lg:col-span-2">
-            <DpoTestAccuracy />
-          </DashboardPanel>
-        </div>
+              <DashboardPanel index={1}>
+                <ClinicExplorer />
+              </DashboardPanel>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Footer */}
         <footer className="border-t border-border/40 pt-6 pb-8">
           <p className="text-center text-[11px] leading-relaxed text-muted-foreground/70">
-            Data sourced from CDC National ART Surveillance System, Betabase.info, Tong et al. 2008, and Magnus et al. 2019.
+            Data sourced from CDC National ART Surveillance System,
+            Betabase.info, Tong et al. 2008, and Magnus et al. 2019.
             <br />
-            This dashboard is informational only and does not constitute medical advice.
+            This dashboard is informational only and does not constitute medical
+            advice.
           </p>
         </footer>
       </main>
