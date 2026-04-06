@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IVF Attrition Sankey — Egg to Embryo</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3-sankey@0.12.3"></script>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --card: #ffffff;
+    --text: #1c1917;
+    --text-muted: #78716c;
+    --border: #e7e5e4;
+    --teal: #0d9488;
+    --teal-light: #ccfbf1;
+    --rose: #e11d48;
+    --rose-light: #ffe4e6;
+    --amber: #d97706;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem 1.5rem;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.25rem;
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--border);
+    border-radius: 0.5rem;
+    padding: 0.25rem;
+    margin-bottom: 1.25rem;
+    width: fit-content;
+  }
+
+  .tab {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.375rem;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .tab:hover { color: var(--text); }
+
+  .tab[aria-selected="true"] {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  /* ── Toggle ── */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+  }
+
+  .toggle-btn {
+    position: relative;
+    width: 2.5rem;
+    height: 1.375rem;
+    border-radius: 9999px;
+    border: 1.5px solid var(--border);
+    background: var(--border);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+
+  .toggle-btn[aria-checked="true"] {
+    background: var(--teal);
+    border-color: var(--teal);
+  }
+
+  .toggle-btn::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 0.9375rem;
+    height: 0.9375rem;
+    border-radius: 50%;
+    background: white;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+
+  .toggle-btn[aria-checked="true"]::after {
+    transform: translateX(1.125rem);
+  }
+
+  /* ── Chart card ── */
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  #sankey-chart { width: 100%; }
+
+  /* ── Sankey styles ── */
+  .sankey-node rect {
+    shape-rendering: crispEdges;
+    stroke: none;
+  }
+
+  .sankey-node text {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 11px;
+    fill: var(--text);
+    pointer-events: none;
+  }
+
+  .sankey-link {
+    fill: none;
+    stroke-opacity: 0.3;
+    transition: stroke-opacity 0.15s ease;
+  }
+
+  .sankey-link:hover {
+    stroke-opacity: 0.6;
+  }
+
+  .stage-label {
+    font-size: 11px;
+    fill: var(--text-muted);
+    font-weight: 500;
+    text-anchor: middle;
+  }
+
+  /* ── Tooltip ── */
+  .tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    z-index: 100;
+    max-width: 220px;
+  }
+
+  .tooltip.visible { opacity: 1; }
+
+  .tooltip-title {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .tooltip-label { color: var(--text-muted); }
+  .tooltip-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ── Summary bar ── */
+  .summary-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--teal-light);
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--teal);
+    font-weight: 500;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .summary-bar .num {
+    font-weight: 700;
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .summary-bar .arrow {
+    color: var(--text-muted);
+    font-size: 1rem;
+  }
+
+  .summary-bar .rate {
+    background: var(--teal);
+    color: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* ── Footer ── */
+  .sources {
+    text-align: center;
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    margin-top: 1.5rem;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 640px) {
+    body { padding: 1rem; }
+    .chart-card { padding: 1rem; }
+    .tabs { flex-wrap: wrap; width: 100%; }
+    .tab { flex: 1; text-align: center; padding: 0.5rem 0.5rem; font-size: 0.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>IVF Attrition: Egg to Embryo</h1>
+  <p class="subtitle">How many eggs survive each stage of IVF, by maternal age group</p>
+
+  <div class="controls">
+    <div class="tabs" role="tablist" aria-label="Age group selector" id="age-tabs"></div>
+    <div class="toggle-group">
+      <span>Counts</span>
+      <button class="toggle-btn" id="pct-toggle" role="switch" aria-checked="false" aria-label="Toggle percentage mode"></button>
+      <span>% of retrieved</span>
+    </div>
+  </div>
+
+  <div class="chart-card">
+    <svg id="sankey-chart" aria-label="Sankey diagram showing IVF egg attrition across stages"></svg>
+  </div>
+
+  <div class="summary-bar" id="summary-bar"></div>
+
+  <p class="sources">
+    Sources: SART national summary data &middot; Demko et al. 2016 &middot;
+    <em>Fertility &amp; Sterility</em> PGT-A study (2021)
+  </p>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const AGE_DATA = {
+  '<35':   { stages: [15, 12, 10, 5, 3],   euploidRate: '60%', label: 'Under 35' },
+  '35-37': { stages: [12, 10, 8,  4, 2],   euploidRate: '50%', label: '35 – 37'  },
+  '38-40': { stages: [10, 8,  6,  3, 1],   euploidRate: '35%', label: '38 – 40'  },
+  '41-42': { stages: [8,  6,  5,  2, 0.5], euploidRate: '22%', label: '41 – 42'  },
+  '43+':   { stages: [6,  4,  3,  1, 0.3], euploidRate: '12%', label: '43+'      },
+};
+
+const STAGE_NAMES = ['Retrieved', 'Mature (MII)', 'Fertilized', 'Blastocyst', 'Euploid'];
+const LOSS_NAMES  = ['Immature', 'Failed fert.', 'Arrested', 'Aneuploid'];
+
+const CONTINUE_COLOR = '#0d9488';
+const LOSS_COLOR     = '#e11d48';
+const NODE_CONTINUE  = '#0f766e';
+const NODE_LOSS      = '#fda4af';
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let currentAge = '<35';
+let showPct = false;
+
+// ─────────────────────────────────────────────
+// DOM REFS
+// ─────────────────────────────────────────────
+const svg       = d3.select('#sankey-chart');
+const tooltip   = document.getElementById('tooltip');
+const summaryEl = document.getElementById('summary-bar');
+const tabsEl    = document.getElementById('age-tabs');
+const toggleBtn = document.getElementById('pct-toggle');
+
+// ─────────────────────────────────────────────
+// BUILD TABS
+// ─────────────────────────────────────────────
+Object.entries(AGE_DATA).forEach(([key, { label }]) => {
+  const btn = document.createElement('button');
+  btn.className = 'tab';
+  btn.role = 'tab';
+  btn.textContent = label;
+  btn.dataset.age = key;
+  btn.setAttribute('aria-selected', key === currentAge ? 'true' : 'false');
+  btn.addEventListener('click', () => selectAge(key));
+  tabsEl.appendChild(btn);
+});
+
+toggleBtn.addEventListener('click', () => {
+  showPct = !showPct;
+  toggleBtn.setAttribute('aria-checked', showPct);
+  render(currentAge);
+});
+
+function selectAge(key) {
+  currentAge = key;
+  tabsEl.querySelectorAll('.tab').forEach(t =>
+    t.setAttribute('aria-selected', t.dataset.age === key ? 'true' : 'false')
+  );
+  render(key);
+}
+
+// ─────────────────────────────────────────────
+// SANKEY GRAPH BUILDER
+// ─────────────────────────────────────────────
+function buildGraph(ageKey) {
+  const { stages } = AGE_DATA[ageKey];
+  const retrieved = stages[0];
+  const nodes = [];
+  const links = [];
+
+  // Create stage nodes (left column of each pair)
+  STAGE_NAMES.forEach((name, i) => {
+    nodes.push({ id: `stage-${i}`, name, value: stages[i], isLoss: false, stageIndex: i });
+  });
+
+  // Create loss nodes
+  LOSS_NAMES.forEach((name, i) => {
+    const lost = stages[i] - stages[i + 1];
+    nodes.push({ id: `loss-${i}`, name, value: lost, isLoss: true, stageIndex: i });
+  });
+
+  // Links: stage → next stage (continuing)
+  for (let i = 0; i < STAGE_NAMES.length - 1; i++) {
+    links.push({
+      source: `stage-${i}`,
+      target: `stage-${i + 1}`,
+      value: stages[i + 1],
+      isLoss: false,
+    });
+  }
+
+  // Links: stage → loss node
+  for (let i = 0; i < LOSS_NAMES.length; i++) {
+    const lost = stages[i] - stages[i + 1];
+    links.push({
+      source: `stage-${i}`,
+      target: `loss-${i}`,
+      value: Math.max(lost, 0.01), // sankey needs > 0
+      isLoss: true,
+    });
+  }
+
+  // Resolve source/target to indices
+  const nodeMap = Object.fromEntries(nodes.map((n, i) => [n.id, i]));
+  const resolvedLinks = links.map(l => ({
+    ...l,
+    source: nodeMap[l.source],
+    target: nodeMap[l.target],
+  }));
+
+  return { nodes, links: resolvedLinks, retrieved };
+}
+
+// ─────────────────────────────────────────────
+// FORMAT HELPERS
+// ─────────────────────────────────────────────
+function fmt(val, retrieved) {
+  if (showPct) return Math.round((val / retrieved) * 100) + '%';
+  return val % 1 === 0 ? val.toString() : val.toFixed(1);
+}
+
+function pctOf(val, total) {
+  return Math.round((val / total) * 100) + '%';
+}
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function render(ageKey) {
+  const container = document.querySelector('.chart-card');
+  const width  = Math.max(container.clientWidth - 48, 400);
+  const height = 380;
+  const margin = { top: 28, right: 24, bottom: 12, left: 24 };
+  const innerW = width - margin.left - margin.right;
+  const innerH = height - margin.top - margin.bottom;
+
+  svg.attr('viewBox', `0 0 ${width} ${height}`)
+     .attr('width', '100%')
+     .attr('height', height);
+
+  const { nodes, links, retrieved } = buildGraph(ageKey);
+
+  // Sankey layout
+  const sankey = d3.sankey()
+    .nodeId(d => d.index)
+    .nodeWidth(14)
+    .nodePadding(18)
+    .nodeSort(null) // preserve insertion order so "continue" is on top
+    .extent([[margin.left, margin.top], [margin.left + innerW, margin.top + innerH]]);
+
+  const graph = sankey({
+    nodes: nodes.map(d => ({ ...d })),
+    links: links.map(d => ({ ...d })),
+  });
+
+  // ── Clear previous ──
+  svg.selectAll('*').remove();
+  const g = svg.append('g');
+
+  // ── Stage column headers ──
+  const stageNodes = graph.nodes.filter(n => !n.isLoss);
+  stageNodes.forEach(n => {
+    g.append('text')
+      .attr('class', 'stage-label')
+      .attr('x', (n.x0 + n.x1) / 2)
+      .attr('y', margin.top - 10)
+      .text(n.name);
+  });
+
+  // ── Links ──
+  const linkSel = g.selectAll('.sankey-link')
+    .data(graph.links, d => `${d.source.id}-${d.target.id}`)
+    .join('path')
+      .attr('class', 'sankey-link')
+      .attr('d', d3.sankeyLinkHorizontal())
+      .attr('stroke', d => d.isLoss ? LOSS_COLOR : CONTINUE_COLOR)
+      .attr('stroke-width', d => Math.max(1, d.width))
+      .style('stroke-opacity', 0)
+      .on('mouseenter', (event, d) => showTooltipLink(event, d, retrieved))
+      .on('mousemove', moveTooltip)
+      .on('mouseleave', hideTooltip);
+
+  linkSel.transition().duration(600).ease(d3.easeCubicOut)
+    .style('stroke-opacity', d => d.isLoss ? 0.2 : 0.35);
+
+  // ── Nodes ──
+  const nodeSel = g.selectAll('.sankey-node')
+    .data(graph.nodes, d => d.id)
+    .join('g')
+      .attr('class', 'sankey-node')
+      .on('mouseenter', (event, d) => showTooltipNode(event, d, retrieved))
+      .on('mousemove', moveTooltip)
+      .on('mouseleave', hideTooltip);
+
+  nodeSel.append('rect')
+    .attr('x', d => d.x0)
+    .attr('y', d => d.y0)
+    .attr('height', d => Math.max(1, d.y1 - d.y0))
+    .attr('width', sankey.nodeWidth())
+    .attr('fill', d => d.isLoss ? NODE_LOSS : NODE_CONTINUE)
+    .attr('rx', 2)
+    .attr('opacity', 0)
+    .transition().duration(600).ease(d3.easeCubicOut)
+    .attr('opacity', 1);
+
+  // Node labels
+  nodeSel.append('text')
+    .attr('x', d => d.isLoss ? d.x1 + 8 : (d.x0 < width / 2 ? d.x1 + 8 : d.x0 - 8))
+    .attr('y', d => (d.y0 + d.y1) / 2)
+    .attr('dy', '0.35em')
+    .attr('text-anchor', d => {
+      if (d.isLoss) return 'start';
+      return d.x0 < width / 2 ? 'start' : 'end';
+    })
+    .attr('font-size', d => d.isLoss ? '10px' : '11px')
+    .attr('fill', d => d.isLoss ? LOSS_COLOR : 'var(--text)')
+    .attr('font-weight', d => d.isLoss ? 400 : 600)
+    .attr('opacity', 0)
+    .text(d => {
+      const v = fmt(d.value, retrieved);
+      if (d.isLoss) return `−${v} ${d.name}`;
+      return v;
+    })
+    .transition().duration(600).delay(200)
+    .attr('opacity', 1);
+
+  // ── Euploid rate annotation ──
+  const euploidNode = graph.nodes.find(n => n.id === 'stage-4');
+  if (euploidNode) {
+    g.append('text')
+      .attr('x', (euploidNode.x0 + euploidNode.x1) / 2)
+      .attr('y', euploidNode.y1 + 18)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '10px')
+      .attr('fill', 'var(--teal)')
+      .attr('font-weight', 600)
+      .attr('opacity', 0)
+      .text(`Euploid rate: ${AGE_DATA[ageKey].euploidRate}`)
+      .transition().duration(600).delay(400)
+      .attr('opacity', 1);
+  }
+
+  // ── Summary bar ──
+  const stages = AGE_DATA[ageKey].stages;
+  summaryEl.innerHTML = `
+    <span class="num">${stages[0]}</span> eggs retrieved
+    <span class="arrow">→</span>
+    <span class="num">${stages[4] % 1 === 0 ? stages[4] : stages[4].toFixed(1)}</span> euploid embryos
+    <span class="arrow">→</span>
+    <span class="rate">${AGE_DATA[ageKey].euploidRate} euploid rate</span>
+  `;
+}
+
+// ─────────────────────────────────────────────
+// TOOLTIP
+// ─────────────────────────────────────────────
+function showTooltipNode(event, d, retrieved) {
+  const stages = AGE_DATA[currentAge].stages;
+  const stageIdx = d.stageIndex;
+  const pctRetrieved = pctOf(d.value, retrieved);
+
+  let dropLine = '';
+  if (!d.isLoss && stageIdx > 0) {
+    const prev = stages[stageIdx - 1];
+    const drop = Math.round(((prev - d.value) / prev) * 100);
+    dropLine = `<div class="tooltip-row"><span class="tooltip-label">Drop from prior</span><span class="tooltip-value" style="color:var(--rose)">${drop}%</span></div>`;
+  }
+  if (d.isLoss) {
+    const parent = stages[stageIdx];
+    const dropPct = Math.round((d.value / parent) * 100);
+    dropLine = `<div class="tooltip-row"><span class="tooltip-label">Loss rate</span><span class="tooltip-value" style="color:var(--rose)">${dropPct}%</span></div>`;
+  }
+
+  tooltip.innerHTML = `
+    <div class="tooltip-title">${d.isLoss ? '⊘ ' + d.name : d.name}</div>
+    <div class="tooltip-row"><span class="tooltip-label">Count</span><span class="tooltip-value">${d.value % 1 === 0 ? d.value : d.value.toFixed(1)}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">% of retrieved</span><span class="tooltip-value">${pctRetrieved}</span></div>
+    ${dropLine}
+  `;
+  tooltip.classList.add('visible');
+  moveTooltip(event);
+}
+
+function showTooltipLink(event, d, retrieved) {
+  const val = d.value;
+  const pct = pctOf(val, retrieved);
+  const sourceStages = AGE_DATA[currentAge].stages;
+  const sourceVal = sourceStages[d.source.stageIndex];
+  const flowPct = Math.round((val / sourceVal) * 100);
+
+  tooltip.innerHTML = `
+    <div class="tooltip-title">${d.source.name} → ${d.target.name}</div>
+    <div class="tooltip-row"><span class="tooltip-label">Count</span><span class="tooltip-value">${val % 1 === 0 ? val : val.toFixed(1)}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">% of retrieved</span><span class="tooltip-value">${pct}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">${d.isLoss ? 'Loss' : 'Continuation'} rate</span><span class="tooltip-value">${flowPct}%</span></div>
+  `;
+  tooltip.classList.add('visible');
+  moveTooltip(event);
+}
+
+function moveTooltip(event) {
+  const pad = 12;
+  let x = event.clientX + pad;
+  let y = event.clientY + pad;
+  const rect = tooltip.getBoundingClientRect();
+  if (x + rect.width > window.innerWidth - pad) x = event.clientX - rect.width - pad;
+  if (y + rect.height > window.innerHeight - pad) y = event.clientY - rect.height - pad;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top  = y + 'px';
+}
+
+function hideTooltip() {
+  tooltip.classList.remove('visible');
+}
+
+// ─────────────────────────────────────────────
+// RESIZE
+// ─────────────────────────────────────────────
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => render(currentAge), 150);
+});
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+render(currentAge);
+</script>
+</body>
+</html>

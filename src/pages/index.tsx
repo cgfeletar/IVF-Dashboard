@@ -6,6 +6,7 @@ import { HcgCurveExplorer } from "@/components/charts/HcgCurveExplorer";
 import { MiscarriageRiskChart } from "@/components/charts/MiscarriageRiskChart";
 import { DpoTestAccuracy } from "@/components/charts/DpoTestAccuracy";
 import { HCGPredictor } from "@/components/charts/HCGPredictor";
+import { IvfAttritionSankey } from "@/components/charts/IvfAttritionSankey";
 import { Heart, Baby, Syringe } from "lucide-react";
 
 export default function DashboardPage() {
@@ -84,11 +85,15 @@ export default function DashboardPage() {
           {/* — IVF — */}
           <TabsContent value={2}>
             <div className="grid grid-cols-1 gap-6 pt-6 lg:grid-cols-2">
-              <DashboardPanel index={0}>
-                <SuccessRatesByAge />
+              <DashboardPanel index={0} className="lg:col-span-2">
+                <IvfAttritionSankey />
               </DashboardPanel>
 
               <DashboardPanel index={1}>
+                <SuccessRatesByAge />
+              </DashboardPanel>
+
+              <DashboardPanel index={2}>
                 <ClinicExplorer />
               </DashboardPanel>
             </div>
