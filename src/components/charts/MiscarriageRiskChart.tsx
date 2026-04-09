@@ -138,7 +138,7 @@ function CurrentWeekMarkerLayer({
 // Main component
 // ---------------------------------------------------------------------------
 
-export function MiscarriageRiskChart(): React.ReactElement {
+export function MiscarriageRiskChart({ className }: { className?: string } = {}): React.ReactElement {
   const [inputs, setInputs] = useState<ChartInputs>({
     maternalAge: DEFAULT_AGE,
     priorMiscarriages: DEFAULT_PRIOR_MISCARRIAGES,
@@ -251,7 +251,7 @@ export function MiscarriageRiskChart(): React.ReactElement {
   );
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="tracking-tight">
           Miscarriage Risk by Gestational Age

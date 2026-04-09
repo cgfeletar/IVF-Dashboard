@@ -258,12 +258,97 @@ function hideTooltip(el: HTMLDivElement) {
 // Component
 // ---------------------------------------------------------------------------
 
-export function IvfAttritionSankey() {
+// ---------------------------------------------------------------------------
+// Funnel view
+// ---------------------------------------------------------------------------
+
+function FunnelView({
+  stages,
+  stageNames,
+}: {
+  stages: number[];
+  stageNames: string[];
+}) {
+  const maxVal = stages[0];
+  const height = 320;
+  const barHeight = height / stageNames.length - 8;
+  const maxBarWidth = 100; // percentage
+
+  return (
+    <div
+      className="flex flex-col items-center gap-1 py-4"
+      role="img"
+      aria-label="Funnel chart showing IVF egg attrition"
+    >
+      {stageNames.map((name, i) => {
+        const value = stages[i];
+        const widthPct = (value / maxVal) * maxBarWidth;
+        const pctOfRetrieved = Math.round((value / maxVal) * 100);
+        const loss = i > 0 ? stages[i - 1] - value : 0;
+        const lossPct = i > 0 ? Math.round((loss / stages[i - 1]) * 100) : 0;
+
+        return (
+          <div key={name} className="group relative flex w-full items-center justify-center">
+            {/* Loss annotation (left) */}
+            <div className="hidden w-24 text-right text-[11px] text-muted-foreground lg:block">
+              {i > 0 && (
+                <span className="text-[#b5564a]">
+                  −{loss % 1 === 0 ? loss : loss.toFixed(1)} ({lossPct}%)
+                </span>
+              )}
+            </div>
+
+            {/* Funnel bar */}
+            <div className="relative mx-3 flex-1" style={{ maxWidth: 600 }}>
+              <div
+                className="mx-auto flex items-center justify-center rounded-md transition-all duration-500"
+                style={{
+                  width: `${widthPct}%`,
+                  height: barHeight,
+                  backgroundColor:
+                    i === stageNames.length - 1
+                      ? PALETTE.teal
+                      : `color-mix(in srgb, ${PALETTE.teal} ${40 + (60 * (stageNames.length - 1 - i)) / (stageNames.length - 1)}%, ${PALETTE.oat})`,
+                }}
+              >
+                <span className="text-xs font-bold text-white drop-shadow-sm">
+                  {value % 1 === 0 ? value : value.toFixed(1)}
+                </span>
+              </div>
+            </div>
+
+            {/* Stage label + pct (right) */}
+            <div className="hidden w-32 text-[11px] lg:block">
+              <span className="font-medium text-foreground">{name}</span>
+              <span className="ml-1.5 text-muted-foreground">
+                {pctOfRetrieved}%
+              </span>
+            </div>
+
+            {/* Mobile: label below bar */}
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground lg:hidden">
+              {name}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
+type ViewMode = "flow" | "funnel";
+
+export function IvfAttritionSankey({ className }: { className?: string } = {}) {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [ageKey, setAgeKey] = useState<AgeKey>("<35");
   const [showPct, setShowPct] = useState(false);
   const [customEggs, setCustomEggs] = useState<string>("");
+  const [viewMode, setViewMode] = useState<ViewMode>("flow");
 
   const data = useMemo(() => AGE_DATA[ageKey], [ageKey]);
 
@@ -460,7 +545,7 @@ export function IvfAttritionSankey() {
     : data.euploidRate;
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle className="tracking-tight">
           IVF Attrition: Egg to Embryo
@@ -498,6 +583,30 @@ export function IvfAttritionSankey() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {/* View mode toggle */}
+            <div
+              className="flex gap-1 rounded-lg bg-muted p-1"
+              role="tablist"
+              aria-label="View mode"
+            >
+              {(["flow", "funnel"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  role="tab"
+                  aria-selected={mode === viewMode}
+                  onClick={() => setViewMode(mode)}
+                  className={[
+                    "rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-all",
+                    mode === viewMode
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground",
+                  ].join(" ")}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+
             {/* Custom egg input */}
             <div className="flex items-center gap-2">
               <label
@@ -555,16 +664,20 @@ export function IvfAttritionSankey() {
           </div>
         </div>
 
-        {/* Sankey diagram */}
-        <div
-          role="img"
-          aria-label={`Sankey diagram showing IVF egg attrition for age group ${AGE_DATA[ageKey].label}`}
-        >
-          <svg ref={svgRef} />
-        </div>
+        {/* Visualization */}
+        {viewMode === "flow" ? (
+          <div
+            role="img"
+            aria-label={`Sankey diagram showing IVF egg attrition for age group ${AGE_DATA[ageKey].label}`}
+          >
+            <svg ref={svgRef} />
+          </div>
+        ) : (
+          <FunnelView stages={displayStages} stageNames={STAGE_NAMES} />
+        )}
 
         {/* Summary bar */}
-        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary">
+        <div className=" flex flex-wrap items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary">
           <span className="text-base font-bold tabular-nums">
             {displayStages[0] % 1 === 0
               ? displayStages[0]

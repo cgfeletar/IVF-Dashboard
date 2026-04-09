@@ -13,7 +13,7 @@ export const CHART_COLORS = {
   secondary: PALETTE.dustyRose,
   muted: PALETTE.oat,
   positive: PALETTE.teal,
-  user: "#8B7BAD",
+  user: PALETTE.dustyRose,
   range: "rgba(94, 158, 150, 0.15)",
 } as const;
 

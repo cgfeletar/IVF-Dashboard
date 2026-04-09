@@ -28,11 +28,12 @@ export function DashboardPanel({ children, index, className }: DashboardPanelPro
 interface SectionHeaderProps {
   title: string;
   description?: string;
+  className?: string;
 }
 
-export function SectionHeader({ title, description }: SectionHeaderProps) {
+export function SectionHeader({ title, description, className }: SectionHeaderProps) {
   return (
-    <div className="lg:col-span-2 flex flex-col gap-0.5 pt-4 first:pt-0">
+    <div className={["col-span-full flex flex-col gap-0.5 pt-4 first:pt-0", className].filter(Boolean).join(" ")}>
       <h2 className="text-sm font-semibold tracking-tight text-foreground">
         {title}
       </h2>

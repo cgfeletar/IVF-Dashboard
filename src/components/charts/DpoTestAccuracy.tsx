@@ -139,7 +139,7 @@ function ImplantationAnnotationLayer({
 // ---------------------------------------------------------------------------
 
 export function DpoTestAccuracy() {
-  const chartData = useMemo(() => transformDpoTestAccuracy(DPO_DATA), []);
+  const chartData = useMemo(() => transformDpoTestAccuracy(DPO_DATA).reverse(), []);
 
   return (
     <Card>
