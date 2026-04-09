@@ -372,7 +372,7 @@ export function MiscarriageRiskChart(): React.ReactElement {
           <div
             className={cn(
               "flex flex-wrap items-center gap-3 rounded-lg px-4 py-3 text-sm",
-              "border border-[#5E9E96]/20 bg-[#5E9E96]/8",
+              "border border-[#4A7870]/20 bg-[#4A7870]/8",
             )}
             role="status"
             aria-live="polite"
@@ -386,7 +386,7 @@ export function MiscarriageRiskChart(): React.ReactElement {
             </span>
             <Badge
               variant="outline"
-              className="border-[#5E9E96]/40 text-[#5E9E96]"
+              className="border-[#4A7870]/40 text-[#4A7870]"
             >
               {currentWeekMetrics.currentRiskPct}% remaining risk
             </Badge>
@@ -448,7 +448,7 @@ export function MiscarriageRiskChart(): React.ReactElement {
             enableSlices={false}
             tooltip={({ point }) => (
               <div
-                className="rounded-md border border-border bg-popover px-3 py-2 text-xs shadow-md"
+                className="min-w-[160px] rounded-md border border-border bg-popover px-3 py-2 text-xs shadow-md"
                 style={{ color: NIVO_THEME.textColor }}
               >
                 <div className="font-semibold">Week {point.data.x}</div>

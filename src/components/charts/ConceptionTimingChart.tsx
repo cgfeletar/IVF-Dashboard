@@ -1,0 +1,204 @@
+/**
+ * ConceptionTimingChart
+ *
+ * Vertical bar chart showing the probability of conception per act of
+ * intercourse by day relative to ovulation, based on Ovia Health (2019).
+ * The fertile window spans Day −5 through Day 0; the bar for the peak
+ * day (Day −1 / Ovulation) is visually highlighted.
+ */
+
+import { useMemo } from "react";
+import { ResponsiveBar, type BarDatum, type BarTooltipProps } from "@nivo/bar";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { CHART_COLORS, PALETTE, NIVO_THEME } from "@/lib/constants";
+import { OVIA_CONCEPTION_DATA } from "@/lib/oviaConceptionData";
+import { transformConceptionTiming } from "@/lib/transforms";
+import type { ConceptionTimingBarDatum } from "@/types/charts";
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+/** Labels for the peak fertile window bars — highlighted in teal */
+const PEAK_LABELS = new Set(["Day -2", "Day -1", "Ovulation"]);
+
+// ---------------------------------------------------------------------------
+// Custom tooltip
+// ---------------------------------------------------------------------------
+
+function ConceptionTooltip({ data }: BarTooltipProps<BarDatum>) {
+  const d = data as unknown as ConceptionTimingBarDatum;
+  const isPeak = PEAK_LABELS.has(d.label);
+
+  const dayLabel =
+    d.day === 0
+      ? "Ovulation day"
+      : d.day > 0
+        ? `${d.day} day${Math.abs(d.day) !== 1 ? "s" : ""} after ovulation`
+        : `${Math.abs(d.day)} day${Math.abs(d.day) !== 1 ? "s" : ""} before ovulation`;
+
+  return (
+    <div className="w-[260px] rounded-md bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md ring-1 ring-foreground/10">
+      <p className="font-medium">{d.label}</p>
+      <p className="mt-0.5 text-muted-foreground">{dayLabel}</p>
+      <p className="mt-1.5">
+        <span
+          className="mr-1.5 inline-block h-2 w-2 rounded-full"
+          style={{ backgroundColor: isPeak ? PALETTE.teal : PALETTE.oat }}
+        />
+        Conception probability:{" "}
+        <span className="font-semibold">{d.probability}%</span>
+      </p>
+      {isPeak && (
+        <p className="mt-1.5 text-muted-foreground">
+          Peak fertile window — highest chance of conception.
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Ovulation marker layer
+// ---------------------------------------------------------------------------
+
+function OvulationMarkerLayer({
+  bars,
+}: {
+  bars: Array<{
+    data: { data: ConceptionTimingBarDatum };
+    x: number;
+    width: number;
+    y: number;
+  }>;
+}) {
+  const ovulationBar = bars.find((b) => b.data.data.day === 0);
+  if (!ovulationBar) return null;
+
+  const cx = ovulationBar.x + ovulationBar.width / 2;
+
+  return (
+    <g>
+      <line
+        x1={cx}
+        x2={cx}
+        y1={ovulationBar.y - 8}
+        y2={ovulationBar.y - 28}
+        stroke={CHART_COLORS.primary}
+        strokeWidth={1.5}
+        strokeDasharray="3,3"
+        opacity={0.7}
+      />
+      <text
+        x={cx}
+        y={ovulationBar.y - 32}
+        textAnchor="middle"
+        fill={CHART_COLORS.primary}
+        fontSize={10}
+        fontFamily="DM Sans, sans-serif"
+        fontWeight={500}
+        opacity={0.85}
+      >
+        Ovulation
+      </text>
+    </g>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
+
+export function ConceptionTimingChart() {
+  const chartData = useMemo(
+    () => transformConceptionTiming(OVIA_CONCEPTION_DATA),
+    [],
+  );
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="tracking-tight">
+          Conception Probability by Day of Intercourse
+        </CardTitle>
+        <CardDescription>
+          Likelihood of conception per act of intercourse relative to ovulation
+          day — Ovia Health study (2019)
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent>
+        <div style={{ height: 320 }}>
+          <ResponsiveBar
+            data={chartData as unknown as BarDatum[]}
+            keys={["probability"]}
+            indexBy="label"
+            layout="vertical"
+            valueScale={{ type: "linear", min: 0, max: 40 }}
+            margin={{ top: 48, right: 24, bottom: 56, left: 52 }}
+            padding={0.35}
+            colors={(bar) => {
+              const d = bar.data as unknown as ConceptionTimingBarDatum;
+              return PEAK_LABELS.has(d.label) ? PALETTE.teal : PALETTE.oat;
+            }}
+            theme={NIVO_THEME}
+            enableGridX={false}
+            enableGridY={true}
+            axisLeft={{
+              tickSize: 0,
+              tickPadding: 8,
+              tickValues: [0, 10, 20, 30, 40],
+              format: (v) => `${v}%`,
+              legend: "Probability (%)",
+              legendPosition: "middle",
+              legendOffset: -42,
+            }}
+            axisBottom={{
+              tickSize: 0,
+              tickPadding: 8,
+            }}
+            enableLabel={true}
+            label={(d) => `${d.value}%`}
+            labelSkipHeight={16}
+            labelTextColor="#ffffff"
+            layers={[
+              "grid",
+              "axes",
+              "bars",
+              (props) => (
+                <OvulationMarkerLayer
+                  bars={
+                    props.bars as unknown as Array<{
+                      data: { data: ConceptionTimingBarDatum };
+                      x: number;
+                      width: number;
+                      y: number;
+                    }>
+                  }
+                />
+              ),
+              "markers",
+              "legends",
+              "annotations",
+            ]}
+            tooltip={ConceptionTooltip}
+            role="img"
+            ariaLabel="Bar chart showing conception probability by day of intercourse relative to ovulation"
+            barAriaLabel={(e) =>
+              `${String(e.indexValue)}: ${String(e.value)}% conception probability`
+            }
+          />
+        </div>
+        <p className="mt-2 text-center text-[11px] text-muted-foreground/60">
+          Teal bars = peak fertile window (Day −2 through Ovulation)
+        </p>
+      </CardContent>
+    </Card>
+  );
+}

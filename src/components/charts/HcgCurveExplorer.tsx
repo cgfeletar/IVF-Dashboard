@@ -108,11 +108,22 @@ function formatDoublingTime(
 // Main component
 // ---------------------------------------------------------------------------
 
+type PregnancyType = "natural" | "ivf";
+type EmbryoDay = "day3" | "day5";
+
 export function HcgCurveExplorer() {
   const [filter, setFilter] = useState<HcgSeriesFilter>("singleton");
+  const [pregnancyType, setPregnancyType] = useState<PregnancyType>("natural");
+  const [embryoDay, setEmbryoDay] = useState<EmbryoDay>("day5");
   const [dpoInput, setDpoInput] = useState("");
   const [hcgInput, setHcgInput] = useState("");
-  const [userBetas, setUserBetas] = useState<Array<{ dpo: number; value: number }>>([]);
+  const [userBetas, setUserBetas] = useState<Array<{ dpo: number; value: number; inputUnit: string; inputDay: number }>>([]);
+
+  const dpoOffset = pregnancyType === "natural" ? 0 : embryoDay === "day3" ? 3 : 5;
+  const inputUnit = pregnancyType === "natural" ? "DPO" : "DPT";
+  // Valid input range in the user's chosen unit
+  const inputMin = 10 - dpoOffset;
+  const inputMax = 28 - dpoOffset;
 
   const baseSeries = useMemo(() => transformHcgCurve(HCG_DATA, filter), [filter]);
 
@@ -158,10 +169,11 @@ export function HcgCurveExplorer() {
   }, [baseSeries, sortedBetas, hasBetas]);
 
   const handleAddBeta = () => {
-    const dpo = parseInt(dpoInput, 10);
+    const inputDay = parseInt(dpoInput, 10);
     const hcg = parseFloat(hcgInput);
-    if (!isNaN(dpo) && !isNaN(hcg) && dpo >= 10 && dpo <= 28 && hcg > 0 && userBetas.length < 4) {
-      setUserBetas((prev) => [...prev, { dpo, value: hcg }]);
+    const dpo = inputDay + dpoOffset;
+    if (!isNaN(inputDay) && !isNaN(hcg) && inputDay >= inputMin && inputDay <= inputMax && hcg > 0 && userBetas.length < 4) {
+      setUserBetas((prev) => [...prev, { dpo, value: hcg, inputUnit, inputDay }]);
       setDpoInput("");
       setHcgInput("");
     }
@@ -180,7 +192,7 @@ export function HcgCurveExplorer() {
   // Build color function for series
   const getSeriesColor = (series: { id: string | number }) => {
     const id = String(series.id);
-    if (id === "My Beta") return CHART_COLORS.positive;
+    if (id === "My Beta") return CHART_COLORS.user;
     if (id.startsWith("Twins")) return CHART_COLORS.secondary;
     return CHART_COLORS.primary;
   };
@@ -205,7 +217,7 @@ export function HcgCurveExplorer() {
             const cx = (xScale as (v: number) => number)(point.data.x as number);
             const cy = (yScale as (v: number) => number)(point.data.y as number);
             return (
-              <circle key={i} cx={cx} cy={cy} r={6} fill={CHART_COLORS.positive} stroke="#ffffff" strokeWidth={2} />
+              <circle key={i} cx={cx} cy={cy} r={6} fill={CHART_COLORS.user} stroke="#ffffff" strokeWidth={2} />
             );
           })}
         </g>
@@ -242,12 +254,60 @@ export function HcgCurveExplorer() {
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {/* Pregnancy type selector */}
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">
+            What type of pregnancy are you tracking?
+          </p>
+          <Tabs
+            value={pregnancyType}
+            onValueChange={(v) => {
+              setPregnancyType(v as PregnancyType);
+              setUserBetas([]);
+              setDpoInput("");
+            }}
+          >
+            <TabsList>
+              <TabsTrigger value="natural">Natural</TabsTrigger>
+              <TabsTrigger value="ivf">IVF transfer</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {pregnancyType === "ivf" && (
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">Embryo day at transfer</p>
+              <Tabs
+                value={embryoDay}
+                onValueChange={(v) => {
+                  setEmbryoDay(v as EmbryoDay);
+                  setUserBetas([]);
+                  setDpoInput("");
+                }}
+              >
+                <TabsList>
+                  <TabsTrigger value="day3">Day 3</TabsTrigger>
+                  <TabsTrigger value="day5">Day 5 / 6 / 7</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <p className="text-xs text-muted-foreground">
+                Enter days past transfer (DPT). Values are converted to DPO for
+                plotting ({embryoDay === "day3" ? "DPO = DPT + 3" : "DPO = DPT + 5"}).
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Plot my betas — stacked rows */}
         <div className="space-y-2">
           {userBetas.map((beta, i) => (
             <div key={i} className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <span className="text-sm">
-                <span className="font-medium text-foreground">DPO {beta.dpo}</span>
+                <span className="font-medium text-foreground">
+                  {beta.inputUnit} {beta.inputDay}
+                  {beta.inputUnit === "DPT" && (
+                    <span className="text-muted-foreground font-normal"> (DPO {beta.dpo})</span>
+                  )}
+                </span>
                 <span className="text-muted-foreground"> — </span>
                 <span className="font-medium text-foreground">
                   {beta.value.toLocaleString()} mIU/mL
@@ -262,7 +322,7 @@ export function HcgCurveExplorer() {
               <button
                 onClick={() => handleRemoveBeta(i)}
                 className="text-xs text-muted-foreground hover:text-foreground"
-                aria-label={`Remove beta DPO ${beta.dpo}`}
+                aria-label={`Remove beta ${beta.inputUnit} ${beta.inputDay}`}
               >
                 ×
               </button>
@@ -273,13 +333,13 @@ export function HcgCurveExplorer() {
             <div className="flex flex-wrap items-end gap-2">
               <div className="flex flex-col gap-1">
                 <label htmlFor="dpo-input" className="text-xs font-medium text-muted-foreground">
-                  DPO
+                  {inputUnit}
                 </label>
                 <Input
                   id="dpo-input"
                   type="number"
-                  min={10}
-                  max={28}
+                  min={inputMin}
+                  max={inputMax}
                   value={dpoInput}
                   onChange={(e) => setDpoInput(e.target.value)}
                   className="w-20"
@@ -368,7 +428,7 @@ export function HcgCurveExplorer() {
             tooltip={({ point }) => {
               const isUserBeta = point.serieId === "My Beta";
               return (
-                <div className="rounded-md border bg-popover px-3 py-2 text-xs shadow-md">
+                <div className="min-w-[200px] rounded-md border bg-popover px-3 py-2 text-xs shadow-md">
                   <p className="font-medium text-popover-foreground">
                     {isUserBeta ? "My Beta" : String(point.serieId)}
                   </p>
@@ -400,13 +460,18 @@ export function HcgCurveExplorer() {
                     fill={fill}
                   />
                 ),
-                data: medianIds.map((id) => ({
-                  id,
-                  label: id,
-                  color: id.startsWith("Twins")
-                    ? CHART_COLORS.secondary
-                    : CHART_COLORS.primary,
-                })),
+                data: [
+                  ...medianIds.map((id) => ({
+                    id,
+                    label: id,
+                    color: id.startsWith("Twins")
+                      ? CHART_COLORS.secondary
+                      : CHART_COLORS.primary,
+                  })),
+                  ...(hasBetas
+                    ? [{ id: "My Beta", label: "My Beta", color: CHART_COLORS.user }]
+                    : []),
+                ],
               },
             ]}
           />

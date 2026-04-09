@@ -1,7 +1,7 @@
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { CDC_SUMMARY_DATASETS, YEARS } from "@/lib/constants";
 import type { Year } from "@/lib/constants";
-import type { CdcArtRecord, CdcApiResponse } from "@/types/cdc";
+import type { CdcArtRecord, CdcPgtRecord, CdcPgtApiResponse } from "@/types/cdc";
 
 export type CdcQueryParams = {
   /** Two-letter state abbreviation, e.g. "OR". Omit for national data. */
@@ -10,16 +10,22 @@ export type CdcQueryParams = {
   year?: Year;
   /** Maximum records to return. Default: 1000. */
   limit?: number;
+  /** Specific columns to select (Socrata $select). Omit for all columns. */
+  fields?: string[];
 };
 
-function buildUrl(resourceId: string, params: Omit<CdcQueryParams, "year">): string {
+function buildUrl(
+  resourceId: string,
+  params: Omit<CdcQueryParams, "year">,
+): string {
   const searchParams = new URLSearchParams();
 
   if (params.state) {
-    searchParams.set(
-      "$where",
-      `locationabbr='${params.state.toUpperCase()}'`,
-    );
+    searchParams.set("$where", `locationabbr='${params.state.toUpperCase()}'`);
+  }
+
+  if (params.fields && params.fields.length > 0) {
+    searchParams.set("$select", params.fields.join(","));
   }
 
   searchParams.set("$limit", String(params.limit ?? 1000));
@@ -45,8 +51,43 @@ async function fetchCdcArtData(
     throw new Error(`CDC API error: ${response.status} ${response.statusText}`);
   }
 
-  const data: CdcApiResponse = await response.json();
-  return data;
+  return response.json() as Promise<CdcArtRecord[]>;
+}
+
+async function fetchCdcPgtData(
+  resourceId: string,
+  params: Omit<CdcQueryParams, "year">,
+): Promise<CdcPgtRecord[]> {
+  const url = buildUrl(resourceId, params);
+
+  const headers: HeadersInit = {};
+  const appToken = import.meta.env.VITE_CDC_APP_TOKEN;
+  if (appToken) {
+    headers["X-App-Token"] = appToken;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (!response.ok) {
+    throw new Error(`CDC API error: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json() as Promise<CdcPgtApiResponse>;
+}
+
+export function useCdcPgtData(params: Omit<CdcQueryParams, "fields"> = {}) {
+  const year = params.year ?? "2022";
+  const resourceId = CDC_SUMMARY_DATASETS[year];
+
+  return useQuery({
+    queryKey: ["cdc-art-pgt", year] as const,
+    queryFn: () =>
+      fetchCdcPgtData(resourceId, {
+        ...params,
+        fields: ["pgt_used", "age_group", "transfers", "live_births", "live_birth_rate"],
+      }),
+    staleTime: 1000 * 60 * 10,
+  });
 }
 
 /** Fetch a single year of CDC ART summary data. */

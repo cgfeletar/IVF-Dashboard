@@ -64,6 +64,20 @@ export type DpoBarDatum = {
 };
 
 // ---------------------------------------------------------------------------
+// Conception Timing — Ovia 2019 (vertical bar)
+// ---------------------------------------------------------------------------
+
+/** One bar in the conception timing chart */
+export type ConceptionTimingBarDatum = {
+  /** Label shown on x-axis, e.g. "Day −2" */
+  label: string;
+  /** Conception probability (%) */
+  probability: number;
+  /** Raw day relative to ovulation — used for tooltip & highlight */
+  day: number;
+};
+
+// ---------------------------------------------------------------------------
 // Panel 4 — Miscarriage Risk (area line)
 // ---------------------------------------------------------------------------
 

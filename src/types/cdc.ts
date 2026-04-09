@@ -39,3 +39,22 @@ export type CdcArtRecord = {
 };
 
 export type CdcApiResponse = CdcArtRecord[];
+
+/**
+ * Record shape from the CDC ART PGT-specific dataset.
+ * Each row represents one combination of age group × PGT status.
+ */
+export type CdcPgtRecord = {
+  /** "Yes" or "No" — whether PGT was used */
+  pgt_used?: string;
+  /** Age group, e.g. "<35", "35-37", "38-40", ">40" */
+  age_group?: string;
+  /** Number of transfers (string) */
+  transfers?: string;
+  /** Number of live births (string) */
+  live_births?: string;
+  /** Live birth rate per transfer as a numeric string, e.g. "52.3" */
+  live_birth_rate?: string;
+};
+
+export type CdcPgtApiResponse = CdcPgtRecord[];

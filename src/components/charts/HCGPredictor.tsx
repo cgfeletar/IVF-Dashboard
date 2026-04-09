@@ -173,8 +173,8 @@ function StatCard({ label, value, accent = "neutral" }: StatCardProps) {
       </p>
       <p
         className={cn("mt-1 text-lg font-semibold tabular-nums", {
-          "text-[#5E9E96]": accent === "teal",
-          "text-[#C4877A]": accent === "rose",
+          "text-[#4A7870]": accent === "teal",
+          "text-[#9B594B]": accent === "rose",
           "text-foreground": accent === "neutral",
         })}
       >
@@ -342,8 +342,8 @@ export function HCGPredictor() {
           <div className="flex items-baseline gap-2">
             <span
               className={cn("text-3xl font-bold tabular-nums", {
-                "text-[#5E9E96]": statAccent() === "teal",
-                "text-[#C4877A]": statAccent() === "rose",
+                "text-[#4A7870]": statAccent() === "teal",
+                "text-[#9B594B]": statAccent() === "rose",
                 "text-foreground": statAccent() === "neutral",
               })}
             >

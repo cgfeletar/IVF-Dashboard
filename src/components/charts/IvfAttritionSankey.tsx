@@ -57,23 +57,37 @@ function applyRates(eggs: number, rates: number[]): number[] {
 }
 
 const RAW_AGE_DATA: Record<AgeKey, Omit<AgeGroupData, "rates">> = {
-  "<35":   { stages: [15, 12, 10, 5, 3],   euploidRate: "60%", label: "Under 35" },
-  "35-37": { stages: [12, 10, 8,  4, 2],   euploidRate: "50%", label: "35 – 37"  },
-  "38-40": { stages: [10, 8,  6,  3, 1],   euploidRate: "35%", label: "38 – 40"  },
-  "41-42": { stages: [8,  6,  5,  2, 0.5], euploidRate: "22%", label: "41 – 42"  },
-  "43+":   { stages: [6,  4,  3,  1, 0.3], euploidRate: "12%", label: "43+"      },
+  "<35": { stages: [15, 12, 10, 5, 3], euploidRate: "60%", label: "Under 35" },
+  "35-37": { stages: [12, 10, 8, 4, 2], euploidRate: "50%", label: "35 – 37" },
+  "38-40": { stages: [10, 8, 6, 3, 1], euploidRate: "35%", label: "38 – 40" },
+  "41-42": { stages: [8, 6, 5, 2, 0.5], euploidRate: "22%", label: "41 – 42" },
+  "43+": { stages: [6, 4, 3, 1, 0.3], euploidRate: "12%", label: "43+" },
 };
 
 const AGE_DATA: Record<AgeKey, AgeGroupData> = Object.fromEntries(
-  Object.entries(RAW_AGE_DATA).map(([k, v]) => [k, { ...v, rates: deriveRates(v.stages) }]),
+  Object.entries(RAW_AGE_DATA).map(([k, v]) => [
+    k,
+    { ...v, rates: deriveRates(v.stages) },
+  ]),
 ) as Record<AgeKey, AgeGroupData>;
 
 const AGE_KEYS: AgeKey[] = ["<35", "35-37", "38-40", "41-42", "43+"];
-const STAGE_NAMES = ["Retrieved", "Mature (MII)", "Fertilized", "Blastocyst", "Euploid"];
-const LOSS_NAMES  = ["Immature", "Failed fert.", "Arrested", "Aneuploid"];
+const STAGE_NAMES = [
+  "Retrieved",
+  "Mature",
+  "Fertilized",
+  "Blastocyst",
+  "Euploid",
+];
+const LOSS_NAMES = [
+  "Immature",
+  "Failed fertilization",
+  "Arrested",
+  "Aneuploid",
+];
 
 const CONTINUE_COLOR = PALETTE.teal;
-const NODE_CONTINUE  = PALETTE.tealHover;
+const NODE_CONTINUE = PALETTE.tealHover;
 
 /** Graduated loss colors — darkest for earliest attrition (top), lightest for latest (bottom). */
 const LOSS_LINK_COLORS = ["#b5564a", "#c4877a", "#d4a89e", "#e8cdc7"];
@@ -103,20 +117,39 @@ function buildGraph(stages: number[]) {
   const nodes: GraphNode[] = [];
   const links: GraphLink[] = [];
 
-  STAGE_NAMES.forEach((name, i) => {
-    nodes.push({ id: `stage-${i}`, name, value: stages[i], isLoss: false, stageIndex: i });
+  // Interleave stage and loss nodes so that within each column, the loss node
+  // has a lower array index than the stage node. d3-sankey with nodeSort(null)
+  // respects array order within a column (lower index = higher/top), so this
+  // places loss nodes ABOVE stage nodes — happy path runs along the bottom.
+  nodes.push({
+    id: "stage-0",
+    name: STAGE_NAMES[0],
+    value: stages[0],
+    isLoss: false,
+    stageIndex: 0,
   });
-
-  LOSS_NAMES.forEach((name, i) => {
+  for (let i = 0; i < LOSS_NAMES.length; i++) {
     const lost = stages[i] - stages[i + 1];
-    nodes.push({ id: `loss-${i}`, name, value: lost, isLoss: true, stageIndex: i });
-  });
+    nodes.push({
+      id: `loss-${i}`,
+      name: LOSS_NAMES[i],
+      value: lost,
+      isLoss: true,
+      stageIndex: i,
+    });
+    nodes.push({
+      id: `stage-${i + 1}`,
+      name: STAGE_NAMES[i + 1],
+      value: stages[i + 1],
+      isLoss: false,
+      stageIndex: i + 1,
+    });
+  }
 
   const nodeMap = new Map(nodes.map((n, i) => [n.id, i]));
 
-  // For each source stage, emit the loss link FIRST so d3-sankey places it
-  // above the continuation link. This means the earliest attrition (Immature)
-  // lands at the top of the loss column and the latest (Aneuploid) at the bottom.
+  // Emit the loss link FIRST so it exits the top portion of each stage node,
+  // and continuation SECOND so it exits the bottom — reinforcing the bottom-path layout.
   for (let i = 0; i < STAGE_NAMES.length - 1; i++) {
     const lost = stages[i] - stages[i + 1];
     links.push({
@@ -209,8 +242,10 @@ function positionTooltip(el: HTMLDivElement, event: MouseEvent) {
   const rect = el.getBoundingClientRect();
   let x = event.clientX + pad;
   let y = event.clientY + pad;
-  if (x + rect.width > window.innerWidth - pad) x = event.clientX - rect.width - pad;
-  if (y + rect.height > window.innerHeight - pad) y = event.clientY - rect.height - pad;
+  if (x + rect.width > window.innerWidth - pad)
+    x = event.clientX - rect.width - pad;
+  if (y + rect.height > window.innerHeight - pad)
+    y = event.clientY - rect.height - pad;
   el.style.left = x + "px";
   el.style.top = y + "px";
 }
@@ -244,11 +279,12 @@ export function IvfAttritionSankey() {
     if (!svgEl || !tipEl) return;
 
     const container = svgEl.parentElement!;
-    const width  = Math.max(container.clientWidth, 400);
+    const width = Math.max(container.clientWidth, 400);
     const height = 380;
-    const margin = { top: 28, right: 24, bottom: 16, left: 24 };
+    const margin = { top: 28, right: 24, bottom: 32, left: 24 };
 
-    const svg = d3.select(svgEl)
+    const svg = d3
+      .select(svgEl)
       .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("width", "100%")
       .attr("height", height);
@@ -294,110 +330,101 @@ export function IvfAttritionSankey() {
     g.selectAll<SVGPathElement, SankeyLink<GraphNode, GraphLink>>(".snk-link")
       .data(graph.links)
       .join("path")
-        .attr("class", "snk-link")
-        .attr("d", sankeyLinkHorizontal())
-        .attr("fill", "none")
-        .attr("stroke", (d) =>
-          d.isLoss ? LOSS_LINK_COLORS[d.lossIndex] ?? LOSS_LINK_COLORS[0] : CONTINUE_COLOR,
-        )
-        .attr("stroke-width", (d) => Math.max(1, d.width ?? 0))
-        .style("stroke-opacity", 0)
-        .on("mouseenter", function (event: MouseEvent, d) {
-          d3.select(this).style("stroke-opacity", 0.6);
-          showLinkTooltip(tipEl, event, d, retrieved, stages);
-        })
-        .on("mousemove", function (event: MouseEvent, d) {
-          positionTooltip(tipEl, event);
-        })
-        .on("mouseleave", function () {
-          d3.select(this).style("stroke-opacity", (d: SankeyLink<GraphNode, GraphLink>) =>
-            d.isLoss ? 0.2 : 0.35,
-          );
-          hideTooltip(tipEl);
-        })
+      .attr("class", "snk-link")
+      .attr("d", sankeyLinkHorizontal())
+      .attr("fill", "none")
+      .attr("stroke", (d) =>
+        d.isLoss
+          ? (LOSS_LINK_COLORS[d.lossIndex] ?? LOSS_LINK_COLORS[0])
+          : CONTINUE_COLOR,
+      )
+      .attr("stroke-width", (d) => Math.max(1, d.width ?? 0))
+      .style("stroke-opacity", 0)
+      .on("mouseenter", function (event: MouseEvent, d) {
+        d3.select(this).style("stroke-opacity", 0.6);
+        showLinkTooltip(tipEl, event, d, retrieved, stages);
+      })
+      .on("mousemove", function (event: MouseEvent, d) {
+        positionTooltip(tipEl, event);
+      })
+      .on("mouseleave", function () {
+        d3.select(this).style(
+          "stroke-opacity",
+          (d: SankeyLink<GraphNode, GraphLink>) => (d.isLoss ? 0.2 : 0.35),
+        );
+        hideTooltip(tipEl);
+      })
       .transition()
-        .duration(600)
-        .ease(d3.easeCubicOut)
-        .style("stroke-opacity", (d) => (d.isLoss ? 0.2 : 0.35));
+      .duration(600)
+      .ease(d3.easeCubicOut)
+      .style("stroke-opacity", (d) => (d.isLoss ? 0.2 : 0.35));
 
     // Nodes
     const nodeSel = g
       .selectAll<SVGGElement, SankeyNode<GraphNode, GraphLink>>(".snk-node")
       .data(graph.nodes)
       .join("g")
-        .attr("class", "snk-node")
-        .on("mouseenter", function (event: MouseEvent, d) {
-          showNodeTooltip(tipEl, event, d, retrieved, stages);
-        })
-        .on("mousemove", function (event: MouseEvent) {
-          positionTooltip(tipEl, event);
-        })
-        .on("mouseleave", () => hideTooltip(tipEl));
+      .attr("class", "snk-node")
+      .on("mouseenter", function (event: MouseEvent, d) {
+        showNodeTooltip(tipEl, event, d, retrieved, stages);
+      })
+      .on("mousemove", function (event: MouseEvent) {
+        positionTooltip(tipEl, event);
+      })
+      .on("mouseleave", () => hideTooltip(tipEl));
 
     nodeSel
       .append("rect")
-        .attr("x", (d) => d.x0 ?? 0)
-        .attr("y", (d) => d.y0 ?? 0)
-        .attr("height", (d) => Math.max(1, (d.y1 ?? 0) - (d.y0 ?? 0)))
-        .attr("width", sankeyLayout.nodeWidth())
-        .attr("fill", (d) =>
-          d.isLoss ? LOSS_NODE_COLORS[d.stageIndex] ?? LOSS_NODE_COLORS[0] : NODE_CONTINUE,
-        )
-        .attr("rx", 2)
-        .attr("opacity", 0)
+      .attr("x", (d) => d.x0 ?? 0)
+      .attr("y", (d) => d.y0 ?? 0)
+      .attr("height", (d) => Math.max(1, (d.y1 ?? 0) - (d.y0 ?? 0)))
+      .attr("width", sankeyLayout.nodeWidth())
+      .attr("fill", (d) =>
+        d.isLoss
+          ? (LOSS_NODE_COLORS[d.stageIndex] ?? LOSS_NODE_COLORS[0])
+          : NODE_CONTINUE,
+      )
+      .attr("rx", 2)
+      .attr("opacity", 0)
       .transition()
-        .duration(600)
-        .ease(d3.easeCubicOut)
-        .attr("opacity", 1);
+      .duration(600)
+      .ease(d3.easeCubicOut)
+      .attr("opacity", 1);
 
     // Node labels
     nodeSel
       .append("text")
-        .attr("x", (d) =>
-          d.isLoss
-            ? (d.x1 ?? 0) + 8
-            : (d.x0 ?? 0) < width / 2
-              ? (d.x1 ?? 0) + 8
-              : (d.x0 ?? 0) - 8,
-        )
-        .attr("y", (d) => ((d.y0 ?? 0) + (d.y1 ?? 0)) / 2)
-        .attr("dy", "0.35em")
-        .attr("text-anchor", (d) => {
-          if (d.isLoss) return "start";
-          return (d.x0 ?? 0) < width / 2 ? "start" : "end";
-        })
-        .attr("font-size", (d) => (d.isLoss ? "10px" : "11px"))
-        .attr("fill", (d) =>
-          d.isLoss
-            ? LOSS_NODE_COLORS[d.stageIndex] ?? LOSS_NODE_COLORS[0]
-            : "var(--color-foreground, #1c1917)",
-        )
-        .attr("font-weight", (d) => (d.isLoss ? 400 : 600))
-        .attr("font-family", "DM Sans, system-ui, sans-serif")
-        .attr("opacity", 0)
-        .text((d) => {
-          const v = fmt(d.value, retrieved, showPct);
-          return d.isLoss ? `−${v} ${d.name}` : v;
-        })
+      .attr("x", (d) => (d.x1 ?? 0) - 18)
+      .attr("y", (d) => ((d.y0 ?? 0) + (d.y1 ?? 0)) / 2)
+      .attr("dy", "0.35em")
+      .attr("text-anchor", () => "end")
+      .attr("font-size", (d) => (d.isLoss ? "10px" : "11px"))
+      .attr("fill", "#000000")
+      .attr("font-weight", (d) => (d.isLoss ? 400 : 600))
+      .attr("font-family", "DM Sans, system-ui, sans-serif")
+      .attr("opacity", 0)
+      .text((d) => {
+        const v = fmt(d.value, retrieved, showPct);
+        return d.isLoss ? `−${v} ${d.name}` : v;
+      })
       .transition()
-        .duration(600)
-        .delay(200)
-        .attr("opacity", 1);
+      .duration(600)
+      .delay(200)
+      .attr("opacity", 1);
 
     // Euploid rate annotation
     const euploidNode = graph.nodes.find((n) => n.id === "stage-4");
     if (euploidNode) {
       g.append("text")
-        .attr("x", ((euploidNode.x0 ?? 0) + (euploidNode.x1 ?? 0)) / 2)
+        .attr("x", euploidNode.x1 ?? 0)
         .attr("y", (euploidNode.y1 ?? 0) + 18)
-        .attr("text-anchor", "middle")
+        .attr("text-anchor", "end")
         .attr("font-size", "10px")
         .attr("fill", PALETTE.teal)
         .attr("font-weight", 600)
         .attr("font-family", "DM Sans, system-ui, sans-serif")
         .attr("opacity", 0)
-        .text(`Euploid rate: ${data.euploidRate}`)
-      .transition()
+        .transition()
         .duration(600)
         .delay(400)
         .attr("opacity", 1);
@@ -423,7 +450,10 @@ export function IvfAttritionSankey() {
     };
   }, [render]);
 
-  const isCustom = customEggs !== "" && !isNaN(parseFloat(customEggs)) && parseFloat(customEggs) > 0;
+  const isCustom =
+    customEggs !== "" &&
+    !isNaN(parseFloat(customEggs)) &&
+    parseFloat(customEggs) > 0;
   const displayStages = activeStages;
   const displayEuploidRate = isCustom
     ? Math.round((displayStages[4] / displayStages[0]) * 100) + "%"
@@ -536,12 +566,16 @@ export function IvfAttritionSankey() {
         {/* Summary bar */}
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary">
           <span className="text-base font-bold tabular-nums">
-            {displayStages[0] % 1 === 0 ? displayStages[0] : displayStages[0].toFixed(1)}
+            {displayStages[0] % 1 === 0
+              ? displayStages[0]
+              : displayStages[0].toFixed(1)}
           </span>
           <span>retrieved</span>
           <span className="text-muted-foreground">→</span>
           <span className="text-base font-bold tabular-nums">
-            {displayStages[4] % 1 === 0 ? displayStages[4] : displayStages[4].toFixed(1)}
+            {displayStages[4] % 1 === 0
+              ? displayStages[4]
+              : displayStages[4].toFixed(1)}
           </span>
           <span>euploid</span>
           <span className="text-muted-foreground">→</span>

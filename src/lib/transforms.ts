@@ -20,9 +20,12 @@ import type {
   NivoLineSeries,
   MiscarriageRiskDatum,
   DpoBarDatum,
+  ConceptionTimingBarDatum,
 } from "@/types/charts";
 import type { HcgDataPoint } from "@/lib/hcgData";
 import type { DpoDataPoint } from "@/lib/dpoData";
+import type { OviaConceptionDataPoint } from "@/lib/oviaConceptionData";
+import type { PgtAgeDatum } from "@/lib/sartPgtData";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -195,6 +198,81 @@ export function transformSuccessRatesByAgeMultiYear(
     }
     return datum;
   });
+}
+
+/**
+ * Transform CDC ART records (9tjt-seye dataset) into PGT-A vs Non-PGT-A
+ * live birth rate data per age bracket.
+ *
+ * The 9tjt-seye summary dataset encodes PGT status in the question text:
+ *   - "preimplantation genetic testing performed" → PGT-A series
+ *   - "preimplantation genetic testing not performed" → Non-PGT-A series
+ * Rates are sourced from the "Percentage of intended retrievals resulting in
+ * live-birth deliveries" question, filtered to own-egg subtopics.
+ */
+export function transformLiveBirthRatesByAgePgt(
+  records: CdcArtRecord[],
+): SuccessRateBarDatum[] {
+  type Acc = Record<string, Record<string, { sum: number; count: number }>>;
+  const acc: Acc = {};
+  for (const age of AGE_BRACKETS) {
+    acc[age] = { "PGT-A": { sum: 0, count: 0 }, "Non-PGT-A": { sum: 0, count: 0 } };
+  }
+
+  for (const rec of records) {
+    const q = (rec.question ?? "").toLowerCase();
+    const s = (rec.subtopic ?? "").toLowerCase();
+
+    // Must be a live-birth rate for own-egg cycles
+    const isLiveBirth = q.includes("live-birth") || q.includes("live birth");
+    const isOwn = s.includes("own egg") || s.includes("their own");
+    if (!isLiveBirth || !isOwn) continue;
+
+    const rate = parseRate(rec.data_value);
+    if (rate === null) continue;
+
+    const age = normaliseAgeBracket(rec.breakout);
+    if (age === null) continue;
+
+    // Detect PGT status from question text
+    const hasPgt = q.includes("preimplantation genetic") || q.includes("pgt");
+    const isNotPerformed = q.includes("not performed");
+
+    let series: string;
+    if (hasPgt && isNotPerformed) {
+      series = "Non-PGT-A";
+    } else if (hasPgt) {
+      series = "PGT-A";
+    } else {
+      continue;
+    }
+
+    acc[age][series].sum += rate;
+    acc[age][series].count += 1;
+  }
+
+  return AGE_BRACKETS.map((age) => {
+    const datum: SuccessRateBarDatum = { ageGroup: age };
+    for (const series of ["PGT-A", "Non-PGT-A"] as const) {
+      const { sum, count } = acc[age][series];
+      if (count > 0) {
+        datum[series] = parseFloat((sum / count).toFixed(1));
+      }
+    }
+    return datum;
+  });
+}
+
+/**
+ * Shape SART PGT static data into Nivo grouped-bar data.
+ * Each row maps one age group to its PGT-A and Non-PGT-A live birth rates.
+ */
+export function transformSartPgtData(data: PgtAgeDatum[]): SuccessRateBarDatum[] {
+  return data.map((d) => ({
+    ageGroup: d.ageGroup,
+    "PGT-A": d.pgtA,
+    "Non-PGT-A": d.nonPgtA,
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -384,4 +462,30 @@ export function transformDpoTestAccuracy(
     falseNegative: -p.falseNegative,
     interpolated: !!p.interpolated,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Conception Timing — Ovia 2019 (vertical bar)
+// ---------------------------------------------------------------------------
+
+/**
+ * Transform Ovia conception data points into a Nivo bar shape.
+ *
+ * Day labels use a minus sign (−) for days before ovulation and "Ovulation"
+ * for day 0, making the x-axis immediately readable.
+ */
+export function transformConceptionTiming(
+  dataPoints: OviaConceptionDataPoint[],
+): ConceptionTimingBarDatum[] {
+  return dataPoints.map((p) => {
+    let label: string;
+    if (p.dayRelativeToOvulation === 0) {
+      label = "Ovulation";
+    } else if (p.dayRelativeToOvulation > 0) {
+      label = `Day +${p.dayRelativeToOvulation}`;
+    } else {
+      label = `Day ${p.dayRelativeToOvulation}`;
+    }
+    return { label, probability: p.conceptionProbability, day: p.dayRelativeToOvulation };
+  });
 }
