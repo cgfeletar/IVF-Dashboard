@@ -1,3 +1,5 @@
+import { useState, useCallback } from "react";
+import { LayoutGroup } from "framer-motion";
 import { DashboardPanel } from "@/components/dashboard/DashboardPanel";
 import { SuccessRatesByAge } from "@/components/charts/SuccessRatesByAge";
 import { HcgWorkbench } from "@/components/charts/HcgWorkbench";
@@ -5,139 +7,131 @@ import { MiscarriageRiskChart } from "@/components/charts/MiscarriageRiskChart";
 import { DpoTestAccuracy } from "@/components/charts/DpoTestAccuracy";
 import { ConceptionTimingChart } from "@/components/charts/ConceptionTimingChart";
 import { IvfAttritionSankey } from "@/components/charts/IvfAttritionSankey";
-import { Heart, Baby, Syringe, type LucideIcon } from "lucide-react";
+import { QuickStats } from "@/components/charts/QuickStats";
+import { Heart } from "lucide-react";
 
-function SectionDivider({
-  icon: Icon,
-  label,
-  accent,
-}: {
-  icon: LucideIcon;
-  label: string;
-  accent: string;
-}) {
-  return (
-    <div className="col-span-full flex items-center gap-3 pb-1">
-      <div
-        className={`flex size-7 shrink-0 items-center justify-center rounded-md shadow-sm ${accent}`}
-      >
-        <Icon className="size-4 text-white" strokeWidth={2} />
-      </div>
-      <h2 className="text-base font-semibold tracking-tight">{label}</h2>
-      <div className="h-px flex-1 bg-border/50" />
-    </div>
-  );
-}
+/*
+ * 3 × 3 puzzle grid with embedded header.
+ *
+ * Layout map (grid-template-areas):
+ *   "sankey      header      conception"
+ *   "dpo         quickstats  hcg"
+ *   "miscarriage .           hcg"
+ *
+ * Clicking a panel expands it to ~75 % of the viewport by inflating its
+ * column/row to 3fr while the others shrink to 1fr. A second click collapses
+ * it back.
+ */
 
-/** Subtle gradient class strings for hero cards */
-const GRADIENT = {
-  teal: "bg-gradient-to-br from-[hsl(170,24%,96%)] to-white",
-  warm: "bg-gradient-to-br from-[hsl(30,25%,96%)] to-white",
-  rose: "bg-gradient-to-br from-[hsl(11,35%,96%)] to-white",
-} as const;
+type PanelId =
+  | "sankey"
+  | "success"
+  | "conception"
+  | "dpo"
+  | "hcg"
+  | "miscarriage";
 
 export default function DashboardPage() {
+  const [expandedId, setExpandedId] = useState<PanelId | null>(null);
+
+  const toggle = useCallback(
+    (id: PanelId) => setExpandedId((prev) => (prev === id ? null : id)),
+    [],
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30">
-      {/* Sticky header */}
-      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-sm">
-        <div className="h-[3px] w-full bg-gradient-to-r from-[hsl(170,24%,49%)] via-[hsl(90,20%,60%)] to-[hsl(11,35%,62%)]" />
-        <div className="border-b border-border/60">
-          <div className="mx-auto flex w-[95%] items-center py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(170,24%,49%)] to-[hsl(170,24%,38%)] shadow-sm">
+    <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-background to-muted/30">
+      <LayoutGroup>
+        <main
+          className="puzzle-grid flex-1 min-h-0 gap-3 p-3"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "2fr 1.2fr 2fr",
+            gridTemplateRows: "1.2fr 1fr 0.8fr",
+            gridTemplateAreas: `
+              "sankey      header      conception"
+              "dpo         quickstats  hcg"
+              "miscarriage miscarriage hcg"
+            `,
+          }}
+        >
+          {/* Row 0 */}
+          <DashboardPanel
+            index={0}
+            className="[grid-area:sankey]"
+            isExpanded={expandedId === "sankey"}
+            onClick={() => toggle("sankey")}
+          >
+            <IvfAttritionSankey />
+          </DashboardPanel>
+
+          <div className="flex flex-col gap-3 [grid-area:header]">
+            {/* Inline header */}
+            <div className="flex items-center gap-3 rounded-xl bg-card px-5 py-4 ring-1 ring-foreground/[0.06]">
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(170,24%,49%)] to-[hsl(170,24%,38%)] shadow-sm">
                 <Heart className="size-4 text-white" strokeWidth={2.5} />
               </div>
               <div>
-                <h1 className="text-xl font-semibold tracking-tight">
+                <h1 className="text-lg font-semibold tracking-tight leading-tight">
                   IVF & Fertility Dashboard
                 </h1>
-                <p className="text-xs text-muted-foreground">
-                  Data that helps you understand your journey.
+                <p className="text-xs text-muted-foreground leading-tight">
+                  Click any panel to expand it.
                 </p>
               </div>
             </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Dashboard content */}
-      <main className="mx-auto w-[95%] py-10">
-        {/* ── IVF ── */}
-        <section className="mb-12">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-8">
-            <SectionDivider
-              icon={Syringe}
-              label="IVF"
-              accent="bg-gradient-to-br from-[hsl(170,24%,49%)] to-[hsl(170,24%,38%)]"
-            />
-
-            {/* Sankey / funnel — dominant hero card with gradient bg */}
-            <DashboardPanel index={0} className="lg:col-span-5">
-              <IvfAttritionSankey className={GRADIENT.teal} />
-            </DashboardPanel>
-
-            {/* Success rates — companion card */}
-            <DashboardPanel index={1} className="lg:col-span-3">
+            <DashboardPanel
+              index={1}
+              className="flex-1 min-h-0"
+              isExpanded={expandedId === "success"}
+              onClick={() => toggle("success")}
+            >
               <SuccessRatesByAge />
             </DashboardPanel>
           </div>
-        </section>
 
-        {/* ── Trying to Conceive ── */}
-        <section className="mb-12">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-8">
-            <SectionDivider
-              icon={Heart}
-              label="Trying to Conceive"
-              accent="bg-gradient-to-br from-rose-400 to-rose-500"
-            />
+          <DashboardPanel
+            index={2}
+            className="[grid-area:conception]"
+            isExpanded={expandedId === "conception"}
+            onClick={() => toggle("conception")}
+          >
+            <ConceptionTimingChart />
+          </DashboardPanel>
 
-            {/* Conception timing bar chart */}
-            <DashboardPanel index={2} className="lg:col-span-4">
-              <ConceptionTimingChart />
-            </DashboardPanel>
+          {/* Row 1–2 */}
+          <DashboardPanel
+            index={3}
+            className="[grid-area:dpo]"
+            isExpanded={expandedId === "dpo"}
+            onClick={() => toggle("dpo")}
+          >
+            <DpoTestAccuracy />
+          </DashboardPanel>
 
-            {/* DPO test accuracy */}
-            <DashboardPanel index={3} className="lg:col-span-4">
-              <DpoTestAccuracy />
-            </DashboardPanel>
+          <div className="[grid-area:quickstats] flex items-start">
+            <QuickStats />
           </div>
-        </section>
 
-        {/* ── Pregnancy ── */}
-        <section className="mb-12">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-8">
-            <SectionDivider
-              icon={Baby}
-              label="Pregnancy"
-              accent="bg-gradient-to-br from-[hsl(11,35%,55%)] to-[hsl(11,35%,45%)]"
-            />
+          <DashboardPanel
+            index={4}
+            className="[grid-area:hcg]"
+            isExpanded={expandedId === "hcg"}
+            onClick={() => toggle("hcg")}
+          >
+            <HcgWorkbench />
+          </DashboardPanel>
 
-            {/* hCG Workbench — full width hero card with warm gradient */}
-            <DashboardPanel index={4} className="lg:col-span-8">
-              <HcgWorkbench className={GRADIENT.warm} />
-            </DashboardPanel>
-
-            {/* Miscarriage risk — full width with rose gradient */}
-            <DashboardPanel index={5} className="lg:col-span-8">
-              <MiscarriageRiskChart className={GRADIENT.rose} />
-            </DashboardPanel>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="border-t border-border/40 pb-8 pt-6">
-          <p className="text-center text-[11px] leading-relaxed text-muted-foreground/70">
-            Data sourced from CDC National ART Surveillance System,
-            Betabase.info, Tong et al. 2008, Magnus et al. 2019, and Ovia Health
-            2019.
-            <br />
-            This dashboard is informational only and does not constitute medical
-            advice.
-          </p>
-        </footer>
-      </main>
+          <DashboardPanel
+            index={5}
+            className="[grid-area:miscarriage]"
+            isExpanded={expandedId === "miscarriage"}
+            onClick={() => toggle("miscarriage")}
+          >
+            <MiscarriageRiskChart />
+          </DashboardPanel>
+        </main>
+      </LayoutGroup>
     </div>
   );
 }

@@ -122,7 +122,7 @@ export function ConceptionTimingChart() {
   );
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="tracking-tight">
           Conception Probability by Day of Intercourse
@@ -133,8 +133,8 @@ export function ConceptionTimingChart() {
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
-        <div style={{ height: 320 }}>
+      <CardContent className="flex-1 min-h-0">
+        <div className="h-full min-h-[200px]">
           <ResponsiveBar
             data={chartData as unknown as BarDatum[]}
             keys={["probability"]}

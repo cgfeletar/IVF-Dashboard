@@ -5,16 +5,33 @@ interface DashboardPanelProps {
   children: ReactNode;
   index: number;
   className?: string;
+  isExpanded?: boolean;
+  onClick?: () => void;
 }
 
-export function DashboardPanel({ children, index, className }: DashboardPanelProps) {
+export function DashboardPanel({
+  children,
+  index,
+  className,
+  isExpanded,
+  onClick,
+}: DashboardPanelProps) {
   return (
     <motion.div
+      layout
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
+      transition={{
+        duration: 0.4,
+        delay: index * 0.08,
+        layout: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+      }}
+      onClick={onClick}
       className={[
-        "transition-shadow duration-200 hover:shadow-md",
+        "puzzle-panel cursor-pointer overflow-hidden rounded-xl transition-shadow duration-300",
+        isExpanded
+          ? "shadow-lg ring-2 ring-primary/20"
+          : "shadow-sm hover:shadow-md",
         className,
       ]
         .filter(Boolean)
@@ -22,24 +39,5 @@ export function DashboardPanel({ children, index, className }: DashboardPanelPro
     >
       {children}
     </motion.div>
-  );
-}
-
-interface SectionHeaderProps {
-  title: string;
-  description?: string;
-  className?: string;
-}
-
-export function SectionHeader({ title, description, className }: SectionHeaderProps) {
-  return (
-    <div className={["col-span-full flex flex-col gap-0.5 pt-4 first:pt-0", className].filter(Boolean).join(" ")}>
-      <h2 className="text-sm font-semibold tracking-tight text-foreground">
-        {title}
-      </h2>
-      {description && (
-        <p className="text-xs text-muted-foreground">{description}</p>
-      )}
-    </div>
   );
 }

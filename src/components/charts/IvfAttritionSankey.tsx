@@ -175,8 +175,7 @@ function buildGraph(stages: number[]) {
 // Format helpers
 // ---------------------------------------------------------------------------
 
-function fmt(val: number, retrieved: number, pct: boolean) {
-  if (pct) return Math.round((val / retrieved) * 100) + "%";
+function fmt(val: number) {
   return val % 1 === 0 ? val.toString() : val.toFixed(1);
 }
 
@@ -192,7 +191,6 @@ function showNodeTooltip(
   el: HTMLDivElement,
   event: MouseEvent,
   d: SankeyNode<GraphNode, GraphLink>,
-  retrieved: number,
   stages: number[],
 ) {
   const stageIdx = d.stageIndex;
@@ -210,7 +208,6 @@ function showNodeTooltip(
   el.innerHTML = `
     <div class="snk-title">${d.isLoss ? "⊘ " : ""}${d.name}</div>
     <div class="snk-row"><span class="snk-label">Count</span><span class="snk-val">${d.value % 1 === 0 ? d.value : d.value.toFixed(1)}</span></div>
-    <div class="snk-row"><span class="snk-label">% of retrieved</span><span class="snk-val">${pctOf(d.value, retrieved)}</span></div>
     ${dropLine}
   `;
   positionTooltip(el, event);
@@ -220,7 +217,6 @@ function showLinkTooltip(
   el: HTMLDivElement,
   event: MouseEvent,
   d: SankeyLink<GraphNode, GraphLink>,
-  retrieved: number,
   stages: number[],
 ) {
   const src = d.source as SankeyNode<GraphNode, GraphLink>;
@@ -270,7 +266,7 @@ function FunnelView({
   stageNames: string[];
 }) {
   const maxVal = stages[0];
-  const height = 320;
+  const height = 230;
   const barHeight = height / stageNames.length - 8;
   const maxBarWidth = 100; // percentage
 
@@ -288,7 +284,10 @@ function FunnelView({
         const lossPct = i > 0 ? Math.round((loss / stages[i - 1]) * 100) : 0;
 
         return (
-          <div key={name} className="group relative flex w-full items-center justify-center">
+          <div
+            key={name}
+            className="group relative flex w-full items-center justify-center"
+          >
             {/* Loss annotation (left) */}
             <div className="hidden w-24 text-right text-[11px] text-muted-foreground lg:block">
               {i > 0 && (
@@ -320,9 +319,6 @@ function FunnelView({
             {/* Stage label + pct (right) */}
             <div className="hidden w-32 text-[11px] lg:block">
               <span className="font-medium text-foreground">{name}</span>
-              <span className="ml-1.5 text-muted-foreground">
-                {pctOfRetrieved}%
-              </span>
             </div>
 
             {/* Mobile: label below bar */}
@@ -346,7 +342,6 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [ageKey, setAgeKey] = useState<AgeKey>("<35");
-  const [showPct, setShowPct] = useState(false);
   const [customEggs, setCustomEggs] = useState<string>("");
   const [viewMode, setViewMode] = useState<ViewMode>("flow");
 
@@ -365,14 +360,13 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
 
     const container = svgEl.parentElement!;
     const width = Math.max(container.clientWidth, 400);
-    const height = 380;
+    const height = Math.max(container.clientHeight, 200);
     const margin = { top: 28, right: 24, bottom: 32, left: 24 };
 
     const svg = d3
       .select(svgEl)
       .attr("viewBox", `0 0 ${width} ${height}`)
-      .attr("width", "100%")
-      .attr("height", height);
+      .attr("preserveAspectRatio", "xMidYMid meet");
 
     const { nodes, links, retrieved } = buildGraph(activeStages);
     const stages = activeStages;
@@ -489,7 +483,7 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
       .attr("font-family", "DM Sans, system-ui, sans-serif")
       .attr("opacity", 0)
       .text((d) => {
-        const v = fmt(d.value, retrieved, showPct);
+        const v = fmt(d.value);
         return d.isLoss ? `−${v} ${d.name}` : v;
       })
       .transition()
@@ -514,7 +508,7 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
         .delay(400)
         .attr("opacity", 1);
     }
-  }, [ageKey, showPct, data, activeStages]);
+  }, [ageKey, data, activeStages]);
 
   // Render on mount + state changes
   useEffect(() => {
@@ -545,7 +539,7 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
     : data.euploidRate;
 
   return (
-    <Card className={className}>
+    <Card className={[className, "h-full"].filter(Boolean).join(" ")}>
       <CardHeader>
         <CardTitle className="tracking-tight">
           IVF Attrition: Egg to Embryo
@@ -555,7 +549,7 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="flex-1 min-h-0 flex flex-col">
         {/* Controls row */}
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           {/* Age tabs */}
@@ -571,7 +565,7 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
                 aria-selected={key === ageKey}
                 onClick={() => setAgeKey(key)}
                 className={[
-                  "rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                  "rounded-md px-2 py-1 text-xs font-medium transition-all",
                   key === ageKey
                     ? "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -582,119 +576,90 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
             ))}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* View mode toggle */}
-            <div
-              className="flex gap-1 rounded-lg bg-muted p-1"
-              role="tablist"
-              aria-label="View mode"
-            >
-              {(["flow", "funnel"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  role="tab"
-                  aria-selected={mode === viewMode}
-                  onClick={() => setViewMode(mode)}
-                  className={[
-                    "rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-all",
-                    mode === viewMode
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  ].join(" ")}
-                >
-                  {mode}
-                </button>
-              ))}
-            </div>
-
-            {/* Custom egg input */}
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="custom-eggs"
-                className="text-xs font-medium text-muted-foreground whitespace-nowrap"
-              >
-                My eggs
-              </label>
-              <Input
-                id="custom-eggs"
-                type="number"
-                min={1}
-                max={100}
-                step={1}
-                placeholder={String(data.stages[0])}
-                value={customEggs}
-                onChange={(e) => setCustomEggs(e.target.value)}
-                className="w-[4.5rem] tabular-nums text-center"
-                aria-label="Enter your number of retrieved eggs"
-              />
-              {isCustom && (
-                <button
-                  onClick={() => setCustomEggs("")}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Reset to default egg count"
-                >
-                  Reset
-                </button>
-              )}
-            </div>
-
-            {/* Pct toggle */}
-            <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground select-none">
-              <span>Counts</span>
+          {/* View mode toggle */}
+          <div
+            className="flex gap-1 rounded-lg bg-muted p-1"
+            role="tablist"
+            aria-label="View mode"
+          >
+            {(["flow", "funnel"] as const).map((mode) => (
               <button
-                role="switch"
-                aria-checked={showPct}
-                onClick={() => setShowPct((p) => !p)}
+                key={mode}
+                role="tab"
+                aria-selected={mode === viewMode}
+                onClick={() => setViewMode(mode)}
                 className={[
-                  "relative h-5 w-9 rounded-full border transition-colors",
-                  showPct
-                    ? "border-primary bg-primary"
-                    : "border-border bg-muted",
+                  "rounded-md px-2 py-1 text-xs font-medium capitalize transition-all",
+                  mode === viewMode
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
                 ].join(" ")}
               >
-                <span
-                  className={[
-                    "absolute top-0.5 left-0.5 h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform",
-                    showPct ? "translate-x-4" : "",
-                  ].join(" ")}
-                />
+                {mode}
               </button>
-              <span>% of retrieved</span>
+            ))}
+          </div>
+
+          {/* Custom egg input */}
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="custom-eggs"
+              className="text-xs font-medium text-muted-foreground whitespace-nowrap"
+            >
+              My eggs
             </label>
+            <Input
+              id="custom-eggs"
+              type="number"
+              min={1}
+              max={100}
+              step={1}
+              placeholder={String(data.stages[0])}
+              value={customEggs}
+              onChange={(e) => setCustomEggs(e.target.value)}
+              className="w-[4.5rem] tabular-nums text-center"
+              aria-label="Enter your number of retrieved eggs"
+            />
+            {isCustom && (
+              <button
+                onClick={() => setCustomEggs("")}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Reset to default egg count"
+              >
+                Reset
+              </button>
+            )}
           </div>
         </div>
 
         {/* Visualization */}
         {viewMode === "flow" ? (
           <div
+            className="flex-1 min-h-0 overflow-hidden"
             role="img"
             aria-label={`Sankey diagram showing IVF egg attrition for age group ${AGE_DATA[ageKey].label}`}
           >
-            <svg ref={svgRef} />
+            <svg ref={svgRef} className="h-full w-full" />
           </div>
         ) : (
           <FunnelView stages={displayStages} stageNames={STAGE_NAMES} />
         )}
 
         {/* Summary bar */}
-        <div className=" flex flex-wrap items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-2.5 text-sm font-medium text-primary">
-          <span className="text-base font-bold tabular-nums">
+        <div className="mt-[-12px] flex flex-wrap items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
+          <span className="text-sm font-bold tabular-nums">
             {displayStages[0] % 1 === 0
               ? displayStages[0]
               : displayStages[0].toFixed(1)}
           </span>
           <span>retrieved</span>
           <span className="text-muted-foreground">→</span>
-          <span className="text-base font-bold tabular-nums">
+          <span className="text-sm font-bold tabular-nums">
             {displayStages[4] % 1 === 0
               ? displayStages[4]
               : displayStages[4].toFixed(1)}
           </span>
           <span>euploid</span>
-          <span className="text-muted-foreground">→</span>
-          <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
-            {displayEuploidRate} euploid rate
-          </span>
         </div>
 
         {/* Sources */}

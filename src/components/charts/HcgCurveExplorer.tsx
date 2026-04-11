@@ -289,7 +289,7 @@ export function HcgCurveExplorer({
 
   const chartElement = (
     <div
-      style={{ height: 400 }}
+      className="flex-1 min-h-[200px]"
       role="img"
       aria-label="Line chart showing hCG levels by days past ovulation with confidence bands"
     >

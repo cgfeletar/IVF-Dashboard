@@ -32,7 +32,7 @@ const CHART_DATA = transformSartPgtData(SART_PGT_DATA);
 
 export function SuccessRatesByAge() {
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="tracking-tight">
           Live Birth Rates by Age: PGT-A vs Non-PGT-A
@@ -43,8 +43,8 @@ export function SuccessRatesByAge() {
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
-        <div style={{ height: 350 }}>
+      <CardContent className="flex-1 min-h-0">
+        <div className="h-full min-h-[200px]">
           <ResponsiveBar
             data={CHART_DATA}
             keys={[...PGT_KEYS]}

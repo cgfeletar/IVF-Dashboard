@@ -142,7 +142,7 @@ export function DpoTestAccuracy() {
   const chartData = useMemo(() => transformDpoTestAccuracy(DPO_DATA).reverse(), []);
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle className="tracking-tight">
           Pregnancy Test Accuracy by DPO
@@ -153,8 +153,8 @@ export function DpoTestAccuracy() {
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
-        <div style={{ height: 350 }}>
+      <CardContent className="flex-1 min-h-0">
+        <div className="h-full min-h-[200px]">
           <ResponsiveBar
             data={chartData as unknown as BarDatum[]}
             keys={[...KEYS]}

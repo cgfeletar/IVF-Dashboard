@@ -112,7 +112,7 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
   const hasBetas = userBetas.length > 0;
 
   return (
-    <Card className={className}>
+    <Card className={[className, "h-full"].filter(Boolean).join(" ")}>
       <CardHeader>
         <CardTitle className="tracking-tight">hCG Workbench</CardTitle>
         <CardDescription>
@@ -121,7 +121,7 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent className="flex-1 min-h-0 space-y-6 overflow-y-auto">
         {/* ── Shared input controls ── */}
         <div className="space-y-4 rounded-lg border border-border/40 bg-muted/20 p-4">
           {/* Pregnancy type */}

@@ -216,7 +216,7 @@ export function HCGPredictor({
       )}
 
       <div
-        style={{ height: 300 }}
+        className="flex-1 min-h-[200px]"
         role="img"
         aria-label="Sigmoid probability curve: estimated ongoing clinical pregnancy rate by beta hCG level"
       >
