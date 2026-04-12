@@ -133,6 +133,8 @@ interface HcgCurveExplorerProps {
   hideControls?: boolean;
   /** Externally-managed betas (overrides internal state when provided) */
   externalBetas?: UserBeta[];
+  /** Externally-managed filter (overrides internal state when provided) */
+  externalFilter?: HcgSeriesFilter;
 }
 
 // ---------------------------------------------------------------------------
@@ -143,9 +145,12 @@ export function HcgCurveExplorer({
   bare,
   hideControls,
   externalBetas,
+  externalFilter,
 }: HcgCurveExplorerProps = {}) {
   // --- Internal state (used in standalone mode) ---
-  const [filter, setFilter] = useState<HcgSeriesFilter>("singleton");
+  const [internalFilter, setInternalFilter] =
+    useState<HcgSeriesFilter>("singleton");
+  const filter = externalFilter ?? internalFilter;
   const [pregnancyType, setPregnancyType] = useState<PregnancyType>("natural");
   const [embryoDay, setEmbryoDay] = useState<EmbryoDay>("day5");
   const [dpoInput, setDpoInput] = useState("");
@@ -289,13 +294,13 @@ export function HcgCurveExplorer({
 
   const chartElement = (
     <div
-      className="flex-1 min-h-[200px]"
+      className="flex-1 min-h-[185px]"
       role="img"
       aria-label="Line chart showing hCG levels by days past ovulation with confidence bands"
     >
       <ResponsiveLine
         data={chartData}
-        margin={{ top: 16, right: 24, bottom: 96, left: 64 }}
+        margin={{ top: 0, right: 24, bottom: 56, left: 64 }}
         xScale={{ type: "linear", min: 10, max: xMax }}
         yScale={{ type: "linear", min: 0, max: yMax ?? "auto" }}
         curve="monotoneX"
@@ -312,12 +317,13 @@ export function HcgCurveExplorer({
           tickPadding: 8,
           legend: "Days Past Ovulation (DPO)",
           legendOffset: 42,
-          legendPosition: "middle",
+          legendPosition: hasBetas ? "left" : "middle",
         }}
         axisLeft={{
           tickSize: 4,
           tickPadding: 8,
-          legend: "hCG (mIU/mL)",
+          tickValues: 5,
+          legend: "hCG Reference",
           legendOffset: -56,
           legendPosition: "middle",
           format: (v) =>
@@ -353,9 +359,9 @@ export function HcgCurveExplorer({
           {
             anchor: "bottom-right",
             direction: "row",
-            translateY: 86,
-            itemWidth: 160,
-            itemHeight: 24,
+            translateY: 51,
+            itemWidth: 140,
+            itemHeight: 20,
             itemTextColor: NIVO_THEME.textColor,
             symbolSize: 18,
             itemsSpacing: 8,
@@ -396,22 +402,22 @@ export function HcgCurveExplorer({
   // -- Bare mode: just the filter tabs + chart (no card, no input controls) --
   if (bare) {
     return (
-      <div className="space-y-3">
-        {/* Filter is always shown — it only affects this chart */}
-        <div className="flex items-center justify-between gap-3">
-          <h3 className="text-sm font-semibold text-foreground">
-            Reference Curves
-          </h3>
-          <Tabs
-            value={filter}
-            onValueChange={(v: string) => setFilter(v as HcgSeriesFilter)}
-          >
-            <TabsList>
-              <TabsTrigger value="singleton">Singleton</TabsTrigger>
-              <TabsTrigger value="twins">Twins</TabsTrigger>
-              <TabsTrigger value="both">Both</TabsTrigger>
-            </TabsList>
-          </Tabs>
+      <div className="space-y-1">
+        <div className="flex items-center justify-between gap-0">
+          {!externalFilter && (
+            <Tabs
+              value={filter}
+              onValueChange={(v: string) =>
+                setInternalFilter(v as HcgSeriesFilter)
+              }
+            >
+              <TabsList>
+                <TabsTrigger value="singleton">Singleton</TabsTrigger>
+                <TabsTrigger value="twins">Twins</TabsTrigger>
+                <TabsTrigger value="both">Both</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
         </div>
         {chartElement}
       </div>
@@ -432,7 +438,9 @@ export function HcgCurveExplorer({
           </div>
           <Tabs
             value={filter}
-            onValueChange={(v: string) => setFilter(v as HcgSeriesFilter)}
+            onValueChange={(v: string) =>
+              setInternalFilter(v as HcgSeriesFilter)
+            }
           >
             <TabsList>
               <TabsTrigger value="singleton">Singleton</TabsTrigger>

@@ -39,18 +39,18 @@ export function SuccessRatesByAge() {
         </CardTitle>
         <CardDescription>
           Live birth rate per frozen embryo transfer — SART national data,
-          n=181,609 eSET cycles · PGT-A advantage widens with age
+          n=181,609 eSET cycles
         </CardDescription>
       </CardHeader>
 
       <CardContent className="flex-1 min-h-0">
-        <div className="h-full min-h-[200px]">
+        <div className="h-full min-h-[190px]">
           <ResponsiveBar
             data={CHART_DATA}
             keys={[...PGT_KEYS]}
             indexBy="ageGroup"
             groupMode="grouped"
-            margin={{ top: 16, right: 16, bottom: 72, left: 52 }}
+            margin={{ top: 16, right: 16, bottom: 62, left: 52 }}
             padding={0.3}
             innerPadding={3}
             colors={(bar) => PGT_COLORS[bar.id as string] ?? "#999"}
@@ -60,13 +60,13 @@ export function SuccessRatesByAge() {
               tickPadding: 10,
               legend: "Age group",
               legendPosition: "middle",
-              legendOffset: 38,
+              legendOffset: 32,
             }}
             axisLeft={{
               tickSize: 0,
               tickPadding: 8,
               tickValues: 5,
-              legend: "Cumulative live birth rate (%)",
+              legend: "Live birth rate (%)",
               legendPosition: "middle",
               legendOffset: -44,
               format: (v) => `${v}%`,
@@ -76,7 +76,7 @@ export function SuccessRatesByAge() {
             legends={[
               {
                 dataFrom: "keys",
-                anchor: "bottom-right",
+                anchor: "bottom",
                 direction: "row",
                 translateY: 60,
                 itemWidth: 100,
@@ -90,8 +90,7 @@ export function SuccessRatesByAge() {
               <div className="min-w-[180px] rounded-md bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md ring-1 ring-foreground/10">
                 <p className="font-medium">{String(indexValue)}</p>
                 <p>
-                  {String(id)}:{" "}
-                  <span className="font-semibold">{value}%</span>
+                  {String(id)}: <span className="font-semibold">{value}%</span>
                 </p>
               </div>
             )}

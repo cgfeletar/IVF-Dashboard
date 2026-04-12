@@ -8,19 +8,13 @@ import { DpoTestAccuracy } from "@/components/charts/DpoTestAccuracy";
 import { ConceptionTimingChart } from "@/components/charts/ConceptionTimingChart";
 import { IvfAttritionSankey } from "@/components/charts/IvfAttritionSankey";
 import { QuickStats } from "@/components/charts/QuickStats";
-import { Heart } from "lucide-react";
+
 
 /*
- * 3 × 3 puzzle grid with embedded header.
+ * Puzzle grid with embedded header.
  *
- * Layout map (grid-template-areas):
- *   "sankey      header      conception"
- *   "dpo         quickstats  hcg"
- *   "miscarriage .           hcg"
- *
- * Clicking a panel expands it to ~75 % of the viewport by inflating its
- * column/row to 3fr while the others shrink to 1fr. A second click collapses
- * it back.
+ * Clicking a panel expands it as a fixed overlay at ~90 % of the viewport.
+ * Click the backdrop or the panel again to collapse.
  */
 
 type PanelId =
@@ -47,9 +41,10 @@ export default function DashboardPage() {
           style={{
             display: "grid",
             gridTemplateColumns: "2fr 1.2fr 2fr",
-            gridTemplateRows: "1.2fr 1fr 0.8fr",
+            gridTemplateRows: "0.9fr 0.3fr 1fr 0.8fr",
             gridTemplateAreas: `
               "sankey      header      conception"
+              "sankey      header      hcg"
               "dpo         quickstats  hcg"
               "miscarriage miscarriage hcg"
             `,
@@ -67,18 +62,13 @@ export default function DashboardPage() {
 
           <div className="flex flex-col gap-3 [grid-area:header]">
             {/* Inline header */}
-            <div className="flex items-center gap-3 rounded-xl bg-card px-5 py-4 ring-1 ring-foreground/[0.06]">
-              <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(170,24%,49%)] to-[hsl(170,24%,38%)] shadow-sm">
-                <Heart className="size-4 text-white" strokeWidth={2.5} />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold tracking-tight leading-tight">
-                  IVF & Fertility Dashboard
-                </h1>
-                <p className="text-xs text-muted-foreground leading-tight">
-                  Click any panel to expand it.
-                </p>
-              </div>
+            <div className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-[hsl(170,24%,42%)] to-[hsl(170,30%,32%)] px-5 py-4 text-white">
+              <h1 className="text-lg font-semibold tracking-tight leading-tight">
+                IVF & Fertility Dashboard
+              </h1>
+              <p className="text-xs text-white/70 leading-tight">
+                Click any panel to expand it.
+              </p>
             </div>
             <DashboardPanel
               index={1}

@@ -129,20 +129,20 @@ export function ConceptionTimingChart() {
         </CardTitle>
         <CardDescription>
           Likelihood of conception per act of intercourse relative to ovulation
-          day — Ovia Health study (2019)
+          — Ovia Health study (2019)
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="flex-1 min-h-0">
-        <div className="h-full min-h-[200px]">
+      <CardContent className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0">
           <ResponsiveBar
             data={chartData as unknown as BarDatum[]}
             keys={["probability"]}
             indexBy="label"
             layout="vertical"
             valueScale={{ type: "linear", min: 0, max: 40 }}
-            margin={{ top: 48, right: 24, bottom: 56, left: 52 }}
-            padding={0.35}
+            margin={{ top: 10, right: 16, bottom: 30, left: 50 }}
+            padding={0.3}
             colors={(bar) => {
               const d = bar.data as unknown as ConceptionTimingBarDatum;
               return PEAK_LABELS.has(d.label) ? PALETTE.teal : PALETTE.oat;
@@ -195,9 +195,9 @@ export function ConceptionTimingChart() {
             }
           />
         </div>
-        <p className="mt-2 text-center text-[11px] text-muted-foreground/60">
+        <div className="flex flex-wrap items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-1 text-xs font-medium text-primary">
           Teal bars = peak fertile window (Day −2 through Ovulation)
-        </p>
+        </div>
       </CardContent>
     </Card>
   );

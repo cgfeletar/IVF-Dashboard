@@ -18,7 +18,6 @@ import {
 import { CHART_COLORS, PALETTE, NIVO_THEME } from "@/lib/constants";
 import { DPO_DATA } from "@/lib/dpoData";
 import { transformDpoTestAccuracy } from "@/lib/transforms";
-import type { DpoBarDatum } from "@/types/charts";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -51,10 +50,7 @@ function DpoTooltip({ data }: BarTooltipProps<BarDatum>) {
 
   return (
     <div className="w-[320px] rounded-md bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md ring-1 ring-foreground/10">
-      <p className="font-medium">
-        {dpoLabel}
-        {isInterpolated && <span className="text-muted-foreground"> *</span>}
-      </p>
+      <p className="font-medium">{dpoLabel}</p>
       <p className="mt-1">
         <span
           className="mr-1.5 inline-block h-2 w-2 rounded-full"
@@ -75,62 +71,7 @@ function DpoTooltip({ data }: BarTooltipProps<BarDatum>) {
           point.
         </p>
       )}
-      {isInterpolated && (
-        <p className="mt-1 text-muted-foreground italic">
-          * Interpolated estimate
-        </p>
-      )}
     </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Custom annotation layer — "Most implantations complete"
-// ---------------------------------------------------------------------------
-
-function ImplantationAnnotationLayer({
-  bars,
-  yScale,
-}: {
-  bars: Array<{
-    data: { indexValue: string | number };
-    y: number;
-    height: number;
-  }>;
-  yScale: (value: string) => number;
-}) {
-  // Find the bars for 10 DPO and 11 DPO to position the annotation between them
-  const bar10 = bars.find((b) => b.data.indexValue === "10 DPO");
-  const bar11 = bars.find((b) => b.data.indexValue === "11 DPO");
-
-  if (!bar10 || !bar11) return null;
-
-  const midY = (bar10.y + bar10.height / 2 + bar11.y + bar11.height / 2) / 2;
-
-  return (
-    <g>
-      <line
-        x1={0}
-        x2={0}
-        y1={midY - 18}
-        y2={midY + 18}
-        stroke={CHART_COLORS.secondary}
-        strokeWidth={1.5}
-        strokeDasharray="4,3"
-        opacity={0.6}
-      />
-      <text
-        x={4}
-        y={midY - 22}
-        fill={CHART_COLORS.secondary}
-        fontSize={10}
-        fontFamily="DM Sans, sans-serif"
-        fontWeight={500}
-        opacity={0.8}
-      >
-        Most implantations complete
-      </text>
-    </g>
   );
 }
 
@@ -139,7 +80,10 @@ function ImplantationAnnotationLayer({
 // ---------------------------------------------------------------------------
 
 export function DpoTestAccuracy() {
-  const chartData = useMemo(() => transformDpoTestAccuracy(DPO_DATA).reverse(), []);
+  const chartData = useMemo(
+    () => transformDpoTestAccuracy(DPO_DATA).reverse(),
+    [],
+  );
 
   return (
     <Card className="h-full">
@@ -148,8 +92,7 @@ export function DpoTestAccuracy() {
           Pregnancy Test Accuracy by DPO
         </CardTitle>
         <CardDescription>
-          Likelihood of a true positive vs. false negative result for pregnant
-          women testing at each day past ovulation
+          Likelihood of a true positive vs. false negative result
         </CardDescription>
       </CardHeader>
 
@@ -161,7 +104,7 @@ export function DpoTestAccuracy() {
             indexBy="dpo"
             layout="horizontal"
             valueScale={{ type: "linear", min: -100, max: 100 }}
-            margin={{ top: 24, right: 24, bottom: 64, left: 96 }}
+            margin={{ top: 0, right: 24, bottom: 54, left: 56 }}
             padding={0.3}
             colors={(bar) => {
               const key = String(bar.id);
@@ -186,7 +129,7 @@ export function DpoTestAccuracy() {
               tickPadding: 8,
               format: (v) => {
                 const label = String(v);
-                return INTERPOLATED_DPOS.has(label) ? `${label} *` : label;
+                return label;
               },
             }}
             enableLabel={true}
@@ -199,41 +142,10 @@ export function DpoTestAccuracy() {
             layers={[
               "grid",
               "axes",
-              (props) => (
-                <ImplantationAnnotationLayer
-                  bars={props.bars}
-                  yScale={props.yScale as unknown as (v: string) => number}
-                />
-              ),
               "bars",
               "markers",
               "legends",
               "annotations",
-            ]}
-            legends={[
-              {
-                dataFrom: "keys",
-                anchor: "bottom-right",
-                direction: "row",
-                translateY: 56,
-                itemWidth: 120,
-                itemHeight: 16,
-                itemTextColor: "#666",
-                symbolSize: 10,
-                symbolShape: "circle",
-                data: [
-                  {
-                    id: "falseNegative",
-                    label: "False Negative",
-                    color: BAR_COLORS.falseNegative,
-                  },
-                  {
-                    id: "positive",
-                    label: "Positive",
-                    color: BAR_COLORS.positive,
-                  },
-                ],
-              },
             ]}
             tooltip={DpoTooltip}
             role="img"

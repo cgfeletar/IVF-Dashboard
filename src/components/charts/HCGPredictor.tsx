@@ -94,11 +94,23 @@ function buildMarkerLayer(hcg: number | null, markerColor: string) {
                 }}
               >
                 <line
-                  x1={0} y1={bottom} x2={0} y2={my + 10}
-                  stroke={markerColor} strokeWidth={1.5}
-                  strokeDasharray="4 3" strokeOpacity={0.65}
+                  x1={0}
+                  y1={bottom}
+                  x2={0}
+                  y2={my + 10}
+                  stroke={markerColor}
+                  strokeWidth={1.5}
+                  strokeDasharray="4 3"
+                  strokeOpacity={0.65}
                 />
-                <circle cx={0} cy={my} r={8} fill={markerColor} stroke="#ffffff" strokeWidth={2.5} />
+                <circle
+                  cx={0}
+                  cy={my}
+                  r={8}
+                  fill={markerColor}
+                  stroke="#ffffff"
+                  strokeWidth={2.5}
+                />
               </g>
             );
           })()}
@@ -175,13 +187,19 @@ export function HCGPredictor({
     return !isNaN(v) && v > 0 ? v : null;
   }, [internalHcgInput]);
 
-  const parsedHcg = externalHcg !== undefined ? (externalHcg ?? null) : internalParsedHcg;
+  const parsedHcg =
+    externalHcg !== undefined ? (externalHcg ?? null) : internalParsedHcg;
 
   const day = externalDay ?? internalDay;
 
-  const normalizedHcg = parsedHcg != null ? normalizeToDay9(parsedHcg, day) : null;
-  const probability = normalizedHcg != null ? getClinicalPregProbability(normalizedHcg) : null;
-  const markerColor = probability != null ? getProbabilityColor(probability) : CHART_COLORS.primary;
+  const normalizedHcg =
+    parsedHcg != null ? normalizeToDay9(parsedHcg, day) : null;
+  const probability =
+    normalizedHcg != null ? getClinicalPregProbability(normalizedHcg) : null;
+  const markerColor =
+    probability != null
+      ? getProbabilityColor(probability)
+      : CHART_COLORS.primary;
 
   const markerLayer = useMemo(
     () => buildMarkerLayer(normalizedHcg, markerColor),
@@ -203,20 +221,8 @@ export function HCGPredictor({
 
   const chartAndReadout = (
     <>
-      {/* Day normalization note */}
-      {isAdjusted && parsedHcg != null && normalizedHcg != null && (
-        <p className="rounded-md bg-muted/50 px-3 py-2 text-[12px] leading-relaxed text-muted-foreground">
-          Day {day} beta of {parsedHcg.toLocaleString()} mIU/mL adjusted to an
-          estimated day-9 equivalent of{" "}
-          <span className="font-medium text-foreground">
-            {Math.round(normalizedHcg).toLocaleString()} mIU/mL
-          </span>{" "}
-          using the ~48-hour doubling rule.
-        </p>
-      )}
-
       <div
-        className="flex-1 min-h-[200px]"
+        className="flex-1 min-h-[185px]"
         role="img"
         aria-label="Sigmoid probability curve: estimated ongoing clinical pregnancy rate by beta hCG level"
       >
@@ -242,7 +248,7 @@ export function HCGPredictor({
           axisLeft={{
             tickSize: 4,
             tickPadding: 8,
-            legend: "Probability",
+            legend: "Probability Calculator",
             legendOffset: -44,
             legendPosition: "middle",
             tickValues: [0, 0.25, 0.5, 0.75, 1.0],
@@ -258,7 +264,7 @@ export function HCGPredictor({
       {probability != null ? (
         <div className="flex items-baseline gap-2">
           <span
-            className={cn("text-3xl font-bold tabular-nums", {
+            className={cn("text-xl font-bold tabular-nums", {
               "text-[#4A7870]": statAccent() === "teal",
               "text-[#9B594B]": statAccent() === "rose",
               "text-foreground": statAccent() === "neutral",
@@ -271,7 +277,7 @@ export function HCGPredictor({
           </span>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground/60">
+        <p className="text-sm pt-2 text-center">
           Enter a beta value to see your estimated probability.
         </p>
       )}
@@ -284,13 +290,14 @@ export function HCGPredictor({
 
   if (bare) {
     return (
-      <div className="space-y-4">
-        <h3 className="text-sm font-semibold text-foreground">Probability Calculator</h3>
-
+      <div className="space-y-0">
         {!hideControls && (
           <div className="flex flex-wrap items-end gap-6">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="hcg-prob-input" className="text-xs font-medium text-muted-foreground">
+              <label
+                htmlFor="hcg-prob-input"
+                className="text-xs font-medium text-muted-foreground"
+              >
                 Beta hCG (mIU/mL)
               </label>
               <Input
@@ -305,7 +312,9 @@ export function HCGPredictor({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-muted-foreground">Day of draw</span>
+              <span className="text-xs font-medium text-muted-foreground">
+                Day of draw
+              </span>
               <div className="flex flex-wrap gap-1.5">
                 {DAYS.map((d) => (
                   <Button
@@ -338,15 +347,19 @@ export function HCGPredictor({
       <CardHeader>
         <CardTitle className="tracking-tight">hCG Probability Curve</CardTitle>
         <CardDescription>
-          Estimated likelihood of ongoing clinical pregnancy by beta hCG at day 9
-          post-transfer — single euploid FET (Sekhon et al. 2016, <em>Fertil Steril</em>, n=649)
+          Estimated likelihood of ongoing clinical pregnancy by beta hCG at day
+          9 post-transfer — single euploid FET (Sekhon et al. 2016,{" "}
+          <em>Fertil Steril</em>, n=649)
         </CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-5">
         <div className="flex flex-wrap items-end gap-6">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="hcg-prob-input" className="text-xs font-medium text-muted-foreground">
+            <label
+              htmlFor="hcg-prob-input"
+              className="text-xs font-medium text-muted-foreground"
+            >
               Beta hCG (mIU/mL)
             </label>
             <Input
@@ -361,7 +374,9 @@ export function HCGPredictor({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Day of draw (post-transfer)</span>
+            <span className="text-xs font-medium text-muted-foreground">
+              Day of draw (post-transfer)
+            </span>
             <div className="flex flex-wrap gap-1.5">
               {DAYS.map((d) => (
                 <Button
@@ -385,18 +400,26 @@ export function HCGPredictor({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatCard
             label={`Your beta (day ${day})`}
-            value={parsedHcg != null ? `${parsedHcg.toLocaleString()} mIU/mL` : "—"}
+            value={
+              parsedHcg != null ? `${parsedHcg.toLocaleString()} mIU/mL` : "—"
+            }
           />
           {isAdjusted ? (
             <StatCard
               label="Day-9 equivalent"
-              value={normalizedHcg != null ? `${Math.round(normalizedHcg).toLocaleString()} mIU/mL` : "—"}
+              value={
+                normalizedHcg != null
+                  ? `${Math.round(normalizedHcg).toLocaleString()} mIU/mL`
+                  : "—"
+              }
               accent={normalizedHcg != null ? statAccent() : "neutral"}
             />
           ) : (
             <StatCard
               label="Your beta (day 9)"
-              value={parsedHcg != null ? `${parsedHcg.toLocaleString()} mIU/mL` : "—"}
+              value={
+                parsedHcg != null ? `${parsedHcg.toLocaleString()} mIU/mL` : "—"
+              }
               accent={parsedHcg != null ? statAccent() : "neutral"}
             />
           )}
@@ -407,7 +430,8 @@ export function HCGPredictor({
         <p className="text-[11px] leading-relaxed text-muted-foreground/70">
           Curve derived from the published logistic model in Sekhon L et al.,{" "}
           <em>Fertil Steril</em>. 2016;106(3 Suppl):e48 — not raw data points.
-          Population: singleton euploid FET, day-9 beta. Individual outcomes vary.
+          Population: singleton euploid FET, day-9 beta. Individual outcomes
+          vary.
         </p>
       </CardContent>
     </Card>

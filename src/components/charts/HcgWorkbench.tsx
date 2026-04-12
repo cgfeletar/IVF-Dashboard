@@ -7,19 +7,14 @@
  */
 
 import { useState, useMemo } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { HcgCurveExplorer, formatDoublingTime } from "./HcgCurveExplorer";
 import type { UserBeta } from "./HcgCurveExplorer";
 import { HCGPredictor } from "./HCGPredictor";
+import type { HcgSeriesFilter } from "@/lib/transforms";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -41,11 +36,13 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
   // Shared state
   const [pregnancyType, setPregnancyType] = useState<PregnancyType>("natural");
   const [embryoDay, setEmbryoDay] = useState<EmbryoDay>("day5");
+  const [curveFilter, setCurveFilter] = useState<HcgSeriesFilter>("singleton");
   const [userBetas, setUserBetas] = useState<UserBeta[]>([]);
   const [dpoInput, setDpoInput] = useState("");
   const [hcgInput, setHcgInput] = useState("");
 
-  const dpoOffset = pregnancyType === "natural" ? 0 : embryoDay === "day3" ? 3 : 5;
+  const dpoOffset =
+    pregnancyType === "natural" ? 0 : embryoDay === "day3" ? 3 : 5;
   const inputUnit = pregnancyType === "natural" ? "DPO" : "DPT";
   const inputMin = 10 - dpoOffset;
   const inputMax = 28 - dpoOffset;
@@ -64,7 +61,10 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
       hcg > 0 &&
       userBetas.length < 4
     ) {
-      setUserBetas((prev) => [...prev, { dpo, value: hcg, inputUnit, inputDay }]);
+      setUserBetas((prev) => [
+        ...prev,
+        { dpo, value: hcg, inputUnit, inputDay },
+      ]);
       setDpoInput("");
       setHcgInput("");
     }
@@ -95,7 +95,8 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
   // --- Derived values for HCGPredictor ---
   // Use the most recent beta for the probability calculator.
   // Map DPT to TestDay for the predictor's day-normalization.
-  const latestBeta = userBetas.length > 0 ? userBetas[userBetas.length - 1] : null;
+  const latestBeta =
+    userBetas.length > 0 ? userBetas[userBetas.length - 1] : null;
 
   const predictorDay = useMemo((): TestDay | undefined => {
     if (!latestBeta) return undefined;
@@ -113,46 +114,78 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
 
   return (
     <Card className={[className, "h-full"].filter(Boolean).join(" ")}>
-      <CardHeader>
-        <CardTitle className="tracking-tight">hCG Workbench</CardTitle>
-        <CardDescription>
-          Enter your beta hCG readings once — see them plotted on reference
-          curves and get an estimated pregnancy probability simultaneously
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="flex-1 min-h-0 space-y-6 overflow-y-auto">
+      <CardContent className="flex-1 min-h-0 space-y-6 overflow-y-auto pt-4">
         {/* ── Shared input controls ── */}
-        <div className="space-y-4 rounded-lg border border-border/40 bg-muted/20 p-4">
-          {/* Pregnancy type */}
+        <div className="space-y-2 rounded-lg border border-border/40 bg-muted/20 p-2">
+          {/* Pregnancy type + curve filter */}
           <div className="flex flex-wrap items-center gap-4">
             <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">Pregnancy type</p>
-              <Tabs value={pregnancyType} onValueChange={handlePregnancyTypeChange}>
+              <p className="text-xs font-medium text-muted-foreground">
+                Pregnancy type
+              </p>
+              <Tabs
+                value={pregnancyType}
+                onValueChange={handlePregnancyTypeChange}
+              >
                 <TabsList>
-                  <TabsTrigger value="natural">Natural</TabsTrigger>
-                  <TabsTrigger value="ivf">IVF transfer</TabsTrigger>
+                  <TabsTrigger value="natural" className="text-xs">
+                    Natural
+                  </TabsTrigger>
+                  <TabsTrigger value="ivf" className="text-xs">
+                    IVF transfer
+                  </TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
 
             {pregnancyType === "ivf" && (
               <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground">Embryo day</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Embryo day
+                </p>
                 <Tabs value={embryoDay} onValueChange={handleEmbryoDayChange}>
                   <TabsList>
-                    <TabsTrigger value="day3">Day 3</TabsTrigger>
-                    <TabsTrigger value="day5">Day 5/6/7</TabsTrigger>
+                    <TabsTrigger value="day3" className="text-xs">
+                      Day 3
+                    </TabsTrigger>
+                    <TabsTrigger value="day5" className="text-xs">
+                      Day 5/6/7
+                    </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
             )}
+
+            <div className="ml-auto space-y-0">
+              <p className="text-xs font-medium text-muted-foreground">
+                Reference curves
+              </p>
+              <Tabs
+                value={curveFilter}
+                onValueChange={(v: string) =>
+                  setCurveFilter(v as HcgSeriesFilter)
+                }
+              >
+                <TabsList>
+                  <TabsTrigger value="singleton" className="text-xs">
+                    Singleton
+                  </TabsTrigger>
+                  <TabsTrigger value="twins" className="text-xs">
+                    Twins
+                  </TabsTrigger>
+                  <TabsTrigger value="both" className="text-xs">
+                    Both
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
 
           {pregnancyType === "ivf" && (
             <p className="text-xs text-muted-foreground">
               Enter days past transfer (DPT). Converted to DPO for the reference
-              curves ({embryoDay === "day3" ? "DPO = DPT + 3" : "DPO = DPT + 5"}).
+              curves ({embryoDay === "day3" ? "DPO = DPT + 3" : "DPO = DPT + 5"}
+              ).
             </p>
           )}
 
@@ -162,7 +195,7 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
               {userBetas.map((beta, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 rounded-full bg-primary/10 py-1.5 pl-3 pr-2 text-sm"
+                  className="flex items-center gap-2 rounded-full bg-primary/10 py-0.5 pl-2.5 pr-1.5 text-xs"
                 >
                   <span className="font-semibold text-primary tabular-nums">
                     {beta.inputUnit} {beta.inputDay}
@@ -195,7 +228,10 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
           {userBetas.length < 4 && (
             <div className="flex flex-wrap items-end gap-2">
               <div className="flex flex-col gap-1">
-                <label htmlFor="wb-dpo-input" className="text-xs font-medium text-muted-foreground">
+                <label
+                  htmlFor="wb-dpo-input"
+                  className="text-xs font-medium text-muted-foreground"
+                >
                   {inputUnit}
                 </label>
                 <Input
@@ -209,7 +245,10 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label htmlFor="wb-hcg-input" className="text-xs font-medium text-muted-foreground">
+                <label
+                  htmlFor="wb-hcg-input"
+                  className="text-xs font-medium text-muted-foreground"
+                >
                   hCG (mIU/mL)
                 </label>
                 <Input
@@ -234,9 +273,14 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
         </div>
 
         {/* ── Side-by-side charts ── */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="flex flex-col gap-0">
           {/* Left: Reference curves */}
-          <HcgCurveExplorer bare hideControls externalBetas={userBetas} />
+          <HcgCurveExplorer
+            bare
+            hideControls
+            externalBetas={userBetas}
+            externalFilter={curveFilter}
+          />
 
           {/* Right: Probability calculator */}
           <HCGPredictor
@@ -245,30 +289,6 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
             externalHcg={latestBeta?.value}
             externalDay={predictorDay}
           />
-        </div>
-
-        {/* ── Quick reference bar ── */}
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border border-border/40 bg-muted/30 px-4 py-3">
-          <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Quick ref
-          </span>
-          <span className="text-xs text-muted-foreground">
-            50% threshold:{" "}
-            <span className="font-semibold text-foreground">26.5 mIU/mL</span>
-          </span>
-          <span className="text-xs text-muted-foreground">
-            90% threshold:{" "}
-            <span className="font-semibold text-foreground">&gt;100 mIU/mL</span>
-          </span>
-          <span className="text-xs text-muted-foreground">
-            Typical doubling:{" "}
-            <span className="font-semibold text-foreground">48–72 hours</span>
-          </span>
-          {pregnancyType === "natural" && (
-            <span className="text-[11px] italic text-muted-foreground/70">
-              Probability model is based on IVF (euploid FET) data — use as a rough guide for natural pregnancies
-            </span>
-          )}
         </div>
       </CardContent>
     </Card>

@@ -259,14 +259,10 @@ export function MiscarriageRiskChart({
           <CardTitle className="tracking-tight">
             Miscarriage Risk by Gestational Age
           </CardTitle>
-          <CardDescription>
-            Cumulative risk from each gestational week to 20 weeks, based on
-            your profile.
-          </CardDescription>
-          <div className="grid grid-cols-2 gap-5 auto-rows-min min-w-0">
+          <div className="grid grid-cols-2 gap-3 auto-rows-min min-w-0">
             {/* Maternal age slider */}
-            <fieldset className="flex flex-col gap-2">
-              <legend className="text-sm font-medium text-foreground mb-3">
+            <fieldset className="flex flex-col gap-1">
+              <legend className="text-xs font-medium text-foreground mb-2">
                 Maternal age:{" "}
                 <span className="font-semibold">{inputs.maternalAge}</span>
               </legend>
@@ -285,10 +281,10 @@ export function MiscarriageRiskChart({
             </fieldset>
 
             {/* Prior miscarriages */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               <label
                 htmlFor="prior-miscarriages"
-                className="text-sm font-medium text-foreground"
+                className="text-xs font-medium text-foreground"
               >
                 Prior miscarriages
               </label>
@@ -296,7 +292,11 @@ export function MiscarriageRiskChart({
                 value={String(inputs.priorMiscarriages)}
                 onValueChange={setPriorMiscarriages}
               >
-                <SelectTrigger id="prior-miscarriages" className="w-full">
+                <SelectTrigger
+                  id="prior-miscarriages"
+                  className="w-full"
+                  size="sm"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -310,10 +310,10 @@ export function MiscarriageRiskChart({
             </div>
 
             {/* Prior live births */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               <label
                 htmlFor="prior-live-births"
-                className="text-sm font-medium text-foreground"
+                className="text-xs font-medium text-foreground"
               >
                 Prior live births
               </label>
@@ -321,7 +321,11 @@ export function MiscarriageRiskChart({
                 value={String(inputs.priorLiveBirths)}
                 onValueChange={setPriorLiveBirths}
               >
-                <SelectTrigger id="prior-live-births" className="w-full">
+                <SelectTrigger
+                  id="prior-live-births"
+                  className="w-full"
+                  size="sm"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -335,10 +339,10 @@ export function MiscarriageRiskChart({
             </div>
 
             {/* Current week pin */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1">
               <label
                 htmlFor="current-week"
-                className="text-sm font-medium text-foreground"
+                className="text-xs font-medium text-foreground"
               >
                 Current week
               </label>
@@ -350,7 +354,7 @@ export function MiscarriageRiskChart({
                 }
                 onValueChange={setCurrentWeek}
               >
-                <SelectTrigger id="current-week" className="w-full">
+                <SelectTrigger id="current-week" className="w-full" size="sm">
                   <SelectValue placeholder="Select week" />
                 </SelectTrigger>
                 <SelectContent>
@@ -367,7 +371,7 @@ export function MiscarriageRiskChart({
             {currentWeekMetrics !== null && inputs.currentWeek !== null && (
               <div
                 className={cn(
-                  "col-span-full flex flex-wrap items-center gap-3 rounded-lg px-4 py-3 text-sm",
+                  "col-span-full flex flex-wrap items-center justify-center gap-2 rounded-lg px-3 py-1 text-sm",
                   "border border-[#4A7870]/20 bg-[#4A7870]/8",
                 )}
                 role="status"
@@ -382,7 +386,7 @@ export function MiscarriageRiskChart({
                 </span>
                 <Badge
                   variant="outline"
-                  className="border-[#4A7870]/40 text-[#4A7870]"
+                  className="border-[#4A7870]/40 text-[#4A7870] rounded-lg"
                 >
                   {currentWeekMetrics.currentRiskPct}% remaining risk
                 </Badge>
@@ -456,11 +460,6 @@ export function MiscarriageRiskChart({
               )}
             />
           </div>
-
-          <p className="text-xs text-muted-foreground">
-            Based on Tong et al. 2008 and Magnus et al. 2019. This chart is
-            informational only and does not constitute medical advice.
-          </p>
         </div>
       </div>
     </Card>

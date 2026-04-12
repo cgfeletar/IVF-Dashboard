@@ -620,15 +620,6 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
               className="w-[4.5rem] tabular-nums text-center"
               aria-label="Enter your number of retrieved eggs"
             />
-            {isCustom && (
-              <button
-                onClick={() => setCustomEggs("")}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Reset to default egg count"
-              >
-                Reset
-              </button>
-            )}
           </div>
         </div>
 

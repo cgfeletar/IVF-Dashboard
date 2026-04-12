@@ -35,12 +35,15 @@ export function QuickStats() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: i * 0.06 }}
-          className="rounded-xl bg-card px-5 py-4 ring-1 ring-foreground/[0.06] transition-shadow duration-200 hover:shadow-sm"
+          className="flex flex-col items-center gap-1 rounded-xl bg-card px-5 py-4 text-center ring-1 ring-foreground/[0.06] transition-shadow duration-200 hover:shadow-sm"
         >
-          <span className="text-2xl font-semibold tracking-tight" style={{ color: "#8F5248" }}>
+          <span
+            className="text-2xl font-semibold tracking-tight"
+            style={{ color: "#8F5248" }}
+          >
             {stat.highlight}
           </span>
-          <span className="ml-2 text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground">
             {stat.description}
           </span>
         </motion.div>
