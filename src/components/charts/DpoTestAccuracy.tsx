@@ -17,7 +17,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { InfoTip } from "@/components/ui/info-tip";
-import { CHART_COLORS, PALETTE, NIVO_THEME } from "@/lib/constants";
+import { PALETTE, NIVO_THEME } from "@/lib/constants";
 import { DPO_DATA } from "@/lib/dpoData";
 import { transformDpoTestAccuracy } from "@/lib/transforms";
 
@@ -32,11 +32,6 @@ const BAR_COLORS: Record<string, string> = {
   positive: PALETTE.teal,
 };
 
-/** DPO values that are interpolated estimates */
-const INTERPOLATED_DPOS = new Set(
-  DPO_DATA.filter((d) => d.interpolated).map((d) => `${d.dpo} DPO`),
-);
-
 // ---------------------------------------------------------------------------
 // Custom tooltip
 // ---------------------------------------------------------------------------
@@ -45,8 +40,6 @@ function DpoTooltip({ data }: BarTooltipProps<BarDatum>) {
   const dpoLabel = String(data.dpo);
   const positive = data.positive as number;
   const falseNeg = Math.abs(data.falseNegative as number);
-  const isInterpolated = INTERPOLATED_DPOS.has(dpoLabel);
-
   // "1 in X" phrasing for false negative
   const oneInX = falseNeg > 0 ? Math.round(100 / falseNeg) : null;
 

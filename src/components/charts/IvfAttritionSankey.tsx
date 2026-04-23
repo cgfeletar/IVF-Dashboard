@@ -193,6 +193,7 @@ function showNodeTooltip(
   el: HTMLDivElement,
   event: MouseEvent,
   d: SankeyNode<GraphNode, GraphLink>,
+  _retrieved: number,
   stages: number[],
 ) {
   const stageIdx = d.stageIndex;
@@ -219,6 +220,7 @@ function showLinkTooltip(
   el: HTMLDivElement,
   event: MouseEvent,
   d: SankeyLink<GraphNode, GraphLink>,
+  retrieved: number,
   stages: number[],
 ) {
   const src = d.source as SankeyNode<GraphNode, GraphLink>;
@@ -281,7 +283,6 @@ function FunnelView({
       {stageNames.map((name, i) => {
         const value = stages[i];
         const widthPct = (value / maxVal) * maxBarWidth;
-        const pctOfRetrieved = Math.round((value / maxVal) * 100);
         const loss = i > 0 ? stages[i - 1] - value : 0;
         const lossPct = i > 0 ? Math.round((loss / stages[i - 1]) * 100) : 0;
 
@@ -425,13 +426,13 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
         d3.select(this).style("stroke-opacity", 0.6);
         showLinkTooltip(tipEl, event, d, retrieved, stages);
       })
-      .on("mousemove", function (event: MouseEvent, d) {
+      .on("mousemove", function (event: MouseEvent) {
         positionTooltip(tipEl, event);
       })
       .on("mouseleave", function () {
-        d3.select(this).style(
+        d3.select<SVGPathElement, SankeyLink<GraphNode, GraphLink>>(this).style(
           "stroke-opacity",
-          (d: SankeyLink<GraphNode, GraphLink>) => (d.isLoss ? 0.2 : 0.35),
+          (d) => (d.isLoss ? 0.2 : 0.35),
         );
         hideTooltip(tipEl);
       })
@@ -535,15 +536,7 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
     };
   }, [render]);
 
-  const isCustom =
-    customEggs !== "" &&
-    !isNaN(parseFloat(customEggs)) &&
-    parseFloat(customEggs) > 0;
   const displayStages = activeStages;
-  const displayEuploidRate = isCustom
-    ? Math.round((displayStages[4] / displayStages[0]) * 100) + "%"
-    : data.euploidRate;
-
   return (
     <Card className={[className, "h-full"].filter(Boolean).join(" ")}>
       <CardHeader>

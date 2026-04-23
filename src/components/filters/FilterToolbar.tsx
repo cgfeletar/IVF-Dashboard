@@ -17,7 +17,7 @@ export function FilterToolbar() {
         <label htmlFor="global-year" className="text-sm font-medium text-foreground">
           Year
         </label>
-        <Select value={filters.year} onValueChange={(v) => setFilter("year", v)}>
+        <Select value={filters.year} onValueChange={(v) => v && setFilter("year", v)}>
           <SelectTrigger id="global-year" className="w-24">
             <SelectValue />
           </SelectTrigger>
@@ -35,7 +35,7 @@ export function FilterToolbar() {
         <label htmlFor="global-state" className="text-sm font-medium text-foreground">
           State
         </label>
-        <Select value={filters.state} onValueChange={(v) => setFilter("state", v)}>
+        <Select value={filters.state} onValueChange={(v) => v && setFilter("state", v)}>
           <SelectTrigger id="global-state" className="w-40">
             <SelectValue />
           </SelectTrigger>

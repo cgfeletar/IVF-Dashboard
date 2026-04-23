@@ -11,7 +11,7 @@
 
 import { useState, useMemo } from "react";
 import { ResponsiveLine } from "@nivo/line";
-import type { CustomLayerProps } from "@nivo/line";
+import type { LineCustomSvgLayerProps } from "@nivo/line";
 import {
   Card,
   CardHeader,
@@ -43,9 +43,9 @@ export interface UserBeta {
 // Confidence band custom layer
 // ---------------------------------------------------------------------------
 
-function ConfidenceBandLayer({ series, xScale, yScale }: CustomLayerProps) {
+function ConfidenceBandLayer({ series, xScale, yScale }: LineCustomSvgLayerProps<NivoLineSeries>) {
   const bands: React.ReactElement[] = [];
-  const seriesById = new Map(series.map((s) => [s.id, s]));
+  const seriesById = new Map(series.map((s) => [s.id, s] as const));
 
   const pairs = [
     {
@@ -258,7 +258,7 @@ export function HcgCurveExplorer({
       series,
       xScale,
       yScale,
-    }: CustomLayerProps) {
+    }: LineCustomSvgLayerProps<NivoLineSeries>) {
       const betaSeries = series.find((s) => s.id === "My Beta");
       if (!betaSeries || betaSeries.data.length === 0) return null;
       return (
@@ -317,7 +317,7 @@ export function HcgCurveExplorer({
           tickPadding: 8,
           legend: "Days Past Ovulation (DPO)",
           legendOffset: 42,
-          legendPosition: hasBetas ? "left" : "middle",
+          legendPosition: hasBetas ? "start" : "middle",
         }}
         axisLeft={{
           tickSize: 4,
@@ -345,7 +345,7 @@ export function HcgCurveExplorer({
         tooltip={({ point }) => (
           <div className="min-w-[200px] rounded-md border bg-popover px-3 py-2 text-xs shadow-md">
             <p className="font-medium text-popover-foreground">
-              {point.serieId === "My Beta" ? "My Beta" : String(point.serieId)}
+              {point.seriesId === "My Beta" ? "My Beta" : String(point.seriesId)}
             </p>
             <p className="text-muted-foreground">
               DPO {String(point.data.x)} —{" "}

@@ -182,7 +182,7 @@ export function ClinicExplorer({ initialState = DEFAULT_STATE }: ClinicExplorerP
     }
   }, []);
 
-  const handleSliderChange = useCallback((value: number | number[]) => {
+  const handleSliderChange = useCallback((value: number | readonly number[]) => {
     setMinTransfers(Array.isArray(value) ? value[0] ?? 0 : value);
   }, []);
 

@@ -8,8 +8,6 @@ import { DpoTestAccuracy } from "@/components/charts/DpoTestAccuracy";
 import { ConceptionTimingChart } from "@/components/charts/ConceptionTimingChart";
 
 import { IvfAttritionSankey } from "@/components/charts/IvfAttritionSankey";
-import { ClinicExplorer } from "@/components/charts/ClinicExplorer";
-import { QuickStats } from "@/components/charts/QuickStats";
 
 export default function DashboardPage() {
   return (

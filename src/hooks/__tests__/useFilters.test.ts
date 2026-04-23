@@ -269,7 +269,7 @@ describe("URL update logic (URLSearchParams contract)", () => {
 
 describe("reset logic (URL search clearing contract)", () => {
   it("clearing search produces empty URLSearchParams", () => {
-    const params = new URLSearchParams("?year=2021&state=WA");
+    new URLSearchParams("?year=2021&state=WA");
     // Simulate url.search = ""
     const cleared = new URLSearchParams("");
     expect(cleared.toString()).toBe("");

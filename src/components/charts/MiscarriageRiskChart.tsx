@@ -148,19 +148,20 @@ export function MiscarriageRiskChart({
   });
 
   // Stable setters — avoids recreating the handlers on every render.
-  const setAge = useCallback((value: number[]) => {
-    setInputs((prev) => ({ ...prev, maternalAge: value[0] ?? DEFAULT_AGE }));
+  const setAge = useCallback((value: number | readonly number[]) => {
+    const v = Array.isArray(value) ? value[0] ?? DEFAULT_AGE : value;
+    setInputs((prev) => ({ ...prev, maternalAge: v }));
   }, []);
 
-  const setPriorMiscarriages = useCallback((value: string) => {
+  const setPriorMiscarriages = useCallback((value: string | null) => {
     setInputs((prev) => ({ ...prev, priorMiscarriages: Number(value) }));
   }, []);
 
-  const setPriorLiveBirths = useCallback((value: string) => {
+  const setPriorLiveBirths = useCallback((value: string | null) => {
     setInputs((prev) => ({ ...prev, priorLiveBirths: Number(value) }));
   }, []);
 
-  const setCurrentWeek = useCallback((value: string) => {
+  const setCurrentWeek = useCallback((value: string | null) => {
     setInputs((prev) => ({
       ...prev,
       currentWeek: value === "none" ? null : Number(value),
