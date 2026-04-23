@@ -2,6 +2,30 @@
 
 A data visualization dashboard exploring real IVF and fertility datasets — CDC clinic outcomes, hCG reference curves, and evidence-based miscarriage risk modeling. Built to demonstrate full-stack data engineering from raw public APIs to interactive, chart-driven UI.
 
+## Screenshots
+
+### Trying to Conceive
+
+![Trying to Conceive tab](docs/screenshots/tab-ttc.png)
+
+- **Conception Timing Chart** — cycle-day probability visualization
+- **DPO Test Accuracy** — pregnancy test accuracy by days past ovulation
+
+### Pregnancy
+
+![Pregnancy tab](docs/screenshots/tab-pregnancy.png)
+
+- **HCG Workbench** — hCG level trends and reference ranges
+- **Miscarriage Risk Chart** — risk trajectory by gestational week
+
+### IVF
+
+![IVF tab](docs/screenshots/tab-ivf.png)
+
+- **IVF Attrition Sankey** — funnel from retrieval to live birth
+- **Success Rates by Age** — outcome rates across age groups
+- **Clinic Explorer** — compare clinic-level statistics
+
 ## Stack
 
 | Layer | Technology |

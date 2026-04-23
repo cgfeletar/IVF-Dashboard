@@ -15,19 +15,32 @@ export default function DashboardPage() {
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-background to-muted/30">
       {/* Header */}
-      <div className="flex items-center justify-center px-5 py-4">
-        <div className="text-center">
-          <h1 className="text-lg font-semibold tracking-tight leading-tight">
-            IVF & Fertility Dashboard
-          </h1>
-        </div>
+      <div className="border-b border-border px-5 py-4 text-center">
+        <h1 className="text-xl font-semibold tracking-tight leading-tight">
+          <span className="text-primary">IVF</span>
+          <span className="text-muted-foreground font-normal"> & </span>
+          <span className="text-primary">Fertility</span>
+          <span className="text-muted-foreground font-normal"> Dashboard</span>
+        </h1>
       </div>
 
-      <Tabs defaultValue="ttc" className="flex-1 min-h-0 px-3 pb-3">
-        <TabsList className="mx-auto">
-          <TabsTrigger value="ttc">Trying to Conceive</TabsTrigger>
-          <TabsTrigger value="pregnancy">Pregnancy</TabsTrigger>
-          <TabsTrigger value="ivf">IVF</TabsTrigger>
+      <Tabs defaultValue="ttc" className="flex-1 min-h-0 pb-3">
+        <TabsList
+          variant="line"
+          className="w-full justify-start border-b border-border"
+        >
+          <TabsTrigger value="ttc" className="flex-none px-4 py-2.5 text-base">
+            Trying to Conceive
+          </TabsTrigger>
+          <TabsTrigger
+            value="pregnancy"
+            className="flex-none px-4 py-2.5 text-base"
+          >
+            Pregnancy
+          </TabsTrigger>
+          <TabsTrigger value="ivf" className="flex-none px-4 py-2.5 text-base">
+            IVF
+          </TabsTrigger>
         </TabsList>
 
         {/* ── Trying to Conceive ── */}
@@ -72,11 +85,8 @@ export default function DashboardPage() {
           className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden"
         >
           <LayoutGroup id="ivf">
-            <main className="grid h-full grid-cols-1 gap-3 md:grid-cols-2 md:grid-rows-2">
-              <DashboardPanel
-                index={0}
-                className="min-h-[400px] md:min-h-0 md:row-span-2"
-              >
+            <main className="grid h-full grid-cols-1 gap-3 md:grid-cols-2">
+              <DashboardPanel index={0} className="min-h-[400px] md:min-h-0">
                 <IvfAttritionSankey />
               </DashboardPanel>
 
@@ -84,9 +94,9 @@ export default function DashboardPage() {
                 <SuccessRatesByAge />
               </DashboardPanel>
 
-              <DashboardPanel index={2} className="min-h-[400px] md:min-h-0">
+              {/* <DashboardPanel index={2} className="min-h-[400px] md:min-h-0">
                 <ClinicExplorer />
-              </DashboardPanel>
+              </DashboardPanel> */}
             </main>
           </LayoutGroup>
         </TabsContent>
