@@ -11,7 +11,7 @@ import { IvfAttritionSankey } from "@/components/charts/IvfAttritionSankey";
 
 export default function DashboardPage() {
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-background to-muted/30">
+    <div className="flex h-full flex-col overflow-hidden bg-gradient-to-b from-background to-muted/30">
       {/* Header */}
       <div className="border-b border-border px-5 py-4 text-center">
         <h1 className="text-xl font-semibold tracking-tight leading-tight">
