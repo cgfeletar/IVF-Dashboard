@@ -16,8 +16,8 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
+import { InfoTip } from "@/components/ui/info-tip";
 import { Slider } from "@/components/ui/slider";
 import {
   Select,
@@ -253,156 +253,163 @@ export function MiscarriageRiskChart({
 
   return (
     <Card className={className}>
-      <div className="grid flex-1 min-h-0 grid-cols-[1fr_2fr] gap-6 px-4">
-        {/* Inputs */}
-        <div className="flex flex-col gap-2">
-          <CardTitle className="tracking-tight">
-            Miscarriage Risk by Gestational Age
-          </CardTitle>
-          <div className="grid grid-cols-2 gap-3 auto-rows-min min-w-0">
-            {/* Maternal age slider */}
-            <fieldset className="flex flex-col gap-1">
-              <legend className="text-xs font-medium text-foreground mb-2">
-                Maternal age:{" "}
-                <span className="font-semibold">{inputs.maternalAge}</span>
-              </legend>
-              <Slider
-                min={AGE_MIN}
-                max={AGE_MAX}
-                step={1}
-                value={[inputs.maternalAge]}
-                onValueChange={setAge}
-                aria-label="Maternal age"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{AGE_MIN}</span>
-                <span>{AGE_MAX}</span>
-              </div>
-            </fieldset>
+      <CardHeader>
+        <CardTitle className="tracking-tight">
+          Miscarriage Risk by Gestational Age
+        </CardTitle>
+        <InfoTip>
+          <p className="font-medium">Sources</p>
+          <p className="mt-1">Tong et al., <em>Obstet Gynecol</em> 2008;111(3):710-4.</p>
+          <p className="mt-1">Avalos et al., <em>Birth Defects Res A</em> 2012;94(6):417-23.</p>
+          <p className="mt-1">Magnus et al., <em>BMJ</em> 2019;364:l869 — role of maternal age and pregnancy history.</p>
+        </InfoTip>
+      </CardHeader>
 
-            {/* Prior miscarriages */}
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="prior-miscarriages"
-                className="text-xs font-medium text-foreground"
-              >
-                Prior miscarriages
-              </label>
-              <Select
-                value={String(inputs.priorMiscarriages)}
-                onValueChange={setPriorMiscarriages}
-              >
-                <SelectTrigger
-                  id="prior-miscarriages"
-                  className="w-full"
-                  size="sm"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRIOR_MISCARRIAGE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Prior live births */}
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="prior-live-births"
-                className="text-xs font-medium text-foreground"
-              >
-                Prior live births
-              </label>
-              <Select
-                value={String(inputs.priorLiveBirths)}
-                onValueChange={setPriorLiveBirths}
-              >
-                <SelectTrigger
-                  id="prior-live-births"
-                  className="w-full"
-                  size="sm"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRIOR_LIVE_BIRTH_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Current week pin */}
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="current-week"
-                className="text-xs font-medium text-foreground"
-              >
-                Current week
-              </label>
-              <Select
-                value={
-                  inputs.currentWeek !== null
-                    ? String(inputs.currentWeek)
-                    : "none"
-                }
-                onValueChange={setCurrentWeek}
-              >
-                <SelectTrigger id="current-week" className="w-full" size="sm">
-                  <SelectValue placeholder="Select week" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {WEEK_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Positive-framing message */}
-            {currentWeekMetrics !== null && inputs.currentWeek !== null && (
-              <div
-                className={cn(
-                  "col-span-full flex flex-wrap items-center justify-center gap-2 rounded-lg px-3 py-1 text-sm",
-                  "border border-[#4A7870]/20 bg-[#4A7870]/8",
-                )}
-                role="status"
-                aria-live="polite"
-              >
-                <span
-                  className="font-semibold"
-                  style={{ color: CHART_COLORS.positive }}
-                >
-                  Your risk has dropped {currentWeekMetrics.riskReductionPct}%
-                  since week 4
-                </span>
-                <Badge
-                  variant="outline"
-                  className="border-[#4A7870]/40 text-[#4A7870] rounded-lg"
-                >
-                  {currentWeekMetrics.currentRiskPct}% remaining risk
-                </Badge>
-              </div>
-            )}
+      {/* Filters */}
+      <div className="grid grid-cols-4 gap-3 px-4 pb-2">
+        {/* Maternal age slider */}
+        <fieldset className="flex flex-col gap-1">
+          <legend className="text-xs font-medium text-foreground mb-2">
+            Maternal age:{" "}
+            <span className="font-semibold">{inputs.maternalAge}</span>
+          </legend>
+          <Slider
+            min={AGE_MIN}
+            max={AGE_MAX}
+            step={1}
+            value={[inputs.maternalAge]}
+            onValueChange={setAge}
+            aria-label="Maternal age"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{AGE_MIN}</span>
+            <span>{AGE_MAX}</span>
           </div>
+        </fieldset>
+
+        {/* Prior miscarriages */}
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="prior-miscarriages"
+            className="text-xs font-medium text-foreground"
+          >
+            Prior miscarriages
+          </label>
+          <Select
+            value={String(inputs.priorMiscarriages)}
+            onValueChange={setPriorMiscarriages}
+          >
+            <SelectTrigger
+              id="prior-miscarriages"
+              className="w-full"
+              size="sm"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PRIOR_MISCARRIAGE_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
-        {/* Chart */}
-        <div className="min-h-0">
-          <div
-            className="h-full min-h-[200px]"
-            role="img"
-            aria-label="Miscarriage risk area chart showing declining risk from gestational week 4 to 20"
+        {/* Prior live births */}
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="prior-live-births"
+            className="text-xs font-medium text-foreground"
           >
-            <ResponsiveLine
+            Prior live births
+          </label>
+          <Select
+            value={String(inputs.priorLiveBirths)}
+            onValueChange={setPriorLiveBirths}
+          >
+            <SelectTrigger
+              id="prior-live-births"
+              className="w-full"
+              size="sm"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PRIOR_LIVE_BIRTH_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Current week pin */}
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="current-week"
+            className="text-xs font-medium text-foreground"
+          >
+            Current week
+          </label>
+          <Select
+            value={
+              inputs.currentWeek !== null
+                ? String(inputs.currentWeek)
+                : "none"
+            }
+            onValueChange={setCurrentWeek}
+          >
+            <SelectTrigger id="current-week" className="w-full" size="sm">
+              <SelectValue placeholder="Select week" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              {WEEK_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Positive-framing message */}
+      {currentWeekMetrics !== null && inputs.currentWeek !== null && (
+        <div
+          className={cn(
+            "mx-4 mb-2 flex flex-wrap items-center justify-center gap-2 rounded-lg px-3 py-1 text-sm",
+            "border border-[#4A7870]/20 bg-[#4A7870]/8",
+          )}
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            className="font-semibold"
+            style={{ color: CHART_COLORS.positive }}
+          >
+            Your risk has dropped {currentWeekMetrics.riskReductionPct}%
+            since week 4
+          </span>
+          <Badge
+            variant="outline"
+            className="border-[#4A7870]/40 text-[#4A7870] rounded-lg"
+          >
+            {currentWeekMetrics.currentRiskPct}% remaining risk
+          </Badge>
+        </div>
+      )}
+
+      {/* Chart */}
+      <div className="flex-1 min-h-0 px-4 pb-4">
+        <div
+          className="h-full"
+          role="img"
+          aria-label="Miscarriage risk area chart showing declining risk from gestational week 4 to 20"
+        >
+          <ResponsiveLine
               data={chartSeries}
               margin={{ top: 16, right: 24, bottom: 48, left: 52 }}
               xScale={{ type: "linear", min: WEEKS_START, max: WEEKS_END }}
@@ -461,7 +468,6 @@ export function MiscarriageRiskChart({
             />
           </div>
         </div>
-      </div>
     </Card>
   );
 }

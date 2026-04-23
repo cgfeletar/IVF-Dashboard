@@ -222,13 +222,13 @@ export function HCGPredictor({
   const chartAndReadout = (
     <>
       <div
-        className="flex-1 min-h-[185px]"
+        className="flex-1"
         role="img"
         aria-label="Sigmoid probability curve: estimated ongoing clinical pregnancy rate by beta hCG level"
       >
         <ResponsiveLine
           data={CURVE_SERIES}
-          margin={{ top: 20, right: 24, bottom: 56, left: 52 }}
+          margin={{ top: 40, right: 24, bottom: 36, left: 52 }}
           xScale={{ type: "linear", min: 0, max: X_MAX }}
           yScale={{ type: "linear", min: 0, max: 1 }}
           curve="monotoneX"
@@ -290,7 +290,7 @@ export function HCGPredictor({
 
   if (bare) {
     return (
-      <div className="space-y-0">
+      <div className="flex h-full flex-col">
         {!hideControls && (
           <div className="flex flex-wrap items-end gap-6">
             <div className="flex flex-col gap-1.5">

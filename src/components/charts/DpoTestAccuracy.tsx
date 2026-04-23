@@ -12,9 +12,11 @@ import {
   Card,
   CardHeader,
   CardTitle,
+  CardAction,
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { InfoTip } from "@/components/ui/info-tip";
 import { CHART_COLORS, PALETTE, NIVO_THEME } from "@/lib/constants";
 import { DPO_DATA } from "@/lib/dpoData";
 import { transformDpoTestAccuracy } from "@/lib/transforms";
@@ -91,13 +93,19 @@ export function DpoTestAccuracy() {
         <CardTitle className="tracking-tight">
           Pregnancy Test Accuracy by DPO
         </CardTitle>
+        <CardAction>
+          <InfoTip>
+            <p className="font-medium">Source</p>
+            <p>Countdown to Pregnancy — crowd-sourced per-DPO pregnancy test accuracy data.</p>
+          </InfoTip>
+        </CardAction>
         <CardDescription>
           Likelihood of a true positive vs. false negative result
         </CardDescription>
       </CardHeader>
 
       <CardContent className="flex-1 min-h-0">
-        <div className="h-full min-h-[200px]">
+        <div className="h-full">
           <ResponsiveBar
             data={chartData as unknown as BarDatum[]}
             keys={[...KEYS]}

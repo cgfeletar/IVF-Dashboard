@@ -14,9 +14,11 @@ import {
   Card,
   CardHeader,
   CardTitle,
+  CardAction,
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { InfoTip } from "@/components/ui/info-tip";
 import { transformSartPgtData } from "@/lib/transforms";
 import { SART_PGT_DATA } from "@/lib/sartPgtData";
 import { NIVO_THEME, PALETTE } from "@/lib/constants";
@@ -37,6 +39,12 @@ export function SuccessRatesByAge() {
         <CardTitle className="tracking-tight">
           Live Birth Rates by Age: PGT-A vs Non-PGT-A
         </CardTitle>
+        <CardAction>
+          <InfoTip>
+            <p className="font-medium">Source</p>
+            <p>Harris et al. (2024), <em>Fertility and Sterility</em>, PMID 39349118. SART CORS national data, n=181,609 eSET frozen embryo transfer cycles (2016–2019), patients aged 21–40.</p>
+          </InfoTip>
+        </CardAction>
         <CardDescription>
           Live birth rate per frozen embryo transfer — SART national data,
           n=181,609 eSET cycles
@@ -44,7 +52,7 @@ export function SuccessRatesByAge() {
       </CardHeader>
 
       <CardContent className="flex-1 min-h-0">
-        <div className="h-full min-h-[190px]">
+        <div className="h-full">
           <ResponsiveBar
             data={CHART_DATA}
             keys={[...PGT_KEYS]}

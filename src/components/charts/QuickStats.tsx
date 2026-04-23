@@ -28,7 +28,7 @@ const STATS: Stat[] = [
 
 export function QuickStats() {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-row gap-3">
       {STATS.map((stat, i) => (
         <motion.div
           key={stat.highlight}

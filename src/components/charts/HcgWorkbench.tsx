@@ -7,7 +7,8 @@
  */
 
 import { useState, useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardAction, CardContent } from "@/components/ui/card";
+import { InfoTip } from "@/components/ui/info-tip";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -114,7 +115,17 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
 
   return (
     <Card className={[className, "h-full"].filter(Boolean).join(" ")}>
-      <CardContent className="flex-1 min-h-0 space-y-6 overflow-y-auto pt-4">
+      <CardHeader>
+        <CardTitle className="tracking-tight pb-3">hCG Workbench</CardTitle>
+        <CardAction>
+          <InfoTip>
+            <p className="font-medium">Sources</p>
+            <p className="mt-1"><strong>Reference curves:</strong> Betabase community data (DPO 10–28, singleton &amp; twin, 5th/50th/95th percentiles).</p>
+            <p className="mt-1"><strong>Probability model:</strong> Sekhon et al., <em>Fertil Steril</em> 2016;106(3 Suppl):e48. RMA of New York, n=649 single euploid frozen blastocyst transfers, day 9.</p>
+          </InfoTip>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="flex-1 min-h-0 flex flex-col gap-2">
         {/* ── Shared input controls ── */}
         <div className="space-y-2 rounded-lg border border-border/40 bg-muted/20 p-2">
           {/* Pregnancy type + curve filter */}
@@ -272,23 +283,25 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
           )}
         </div>
 
-        {/* ── Side-by-side charts ── */}
-        <div className="flex flex-col gap-0">
-          {/* Left: Reference curves */}
-          <HcgCurveExplorer
-            bare
-            hideControls
-            externalBetas={userBetas}
-            externalFilter={curveFilter}
-          />
+        {/* ── Stacked charts — flex to fill remaining space ── */}
+        <div className="flex flex-1 min-h-0 flex-col gap-2">
+          <div className="flex-1 min-h-0">
+            <HcgCurveExplorer
+              bare
+              hideControls
+              externalBetas={userBetas}
+              externalFilter={curveFilter}
+            />
+          </div>
 
-          {/* Right: Probability calculator */}
-          <HCGPredictor
-            bare
-            hideControls
-            externalHcg={latestBeta?.value}
-            externalDay={predictorDay}
-          />
+          <div className="flex-1 min-h-0">
+            <HCGPredictor
+              bare
+              hideControls
+              externalHcg={latestBeta?.value}
+              externalDay={predictorDay}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>

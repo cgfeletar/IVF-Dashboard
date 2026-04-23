@@ -18,9 +18,11 @@ import {
   Card,
   CardHeader,
   CardTitle,
+  CardAction,
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { InfoTip } from "@/components/ui/info-tip";
 import { Input } from "@/components/ui/input";
 import { PALETTE } from "@/lib/constants";
 
@@ -515,17 +517,21 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
     render();
   }, [render]);
 
-  // Responsive resize
+  // Re-render when the container resizes (covers window resize + tab switches)
   useEffect(() => {
+    const svgEl = svgRef.current;
+    const container = svgEl?.parentElement;
+    if (!container) return;
+
     let timer: ReturnType<typeof setTimeout>;
-    const onResize = () => {
+    const observer = new ResizeObserver(() => {
       clearTimeout(timer);
-      timer = setTimeout(render, 150);
-    };
-    window.addEventListener("resize", onResize);
+      timer = setTimeout(render, 100);
+    });
+    observer.observe(container);
     return () => {
       clearTimeout(timer);
-      window.removeEventListener("resize", onResize);
+      observer.disconnect();
     };
   }, [render]);
 
@@ -544,6 +550,12 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
         <CardTitle className="tracking-tight">
           IVF Attrition: Egg to Embryo
         </CardTitle>
+        <CardAction>
+          <InfoTip>
+            <p className="font-medium">Sources</p>
+            <p>SART national data; Demko et al. 2016; <em>Fertility &amp; Sterility</em> PGT-A study (2021).</p>
+          </InfoTip>
+        </CardAction>
         <CardDescription>
           How many eggs survive each stage of IVF, by maternal age group
         </CardDescription>
@@ -551,7 +563,7 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
 
       <CardContent className="flex-1 min-h-0 flex flex-col">
         {/* Controls row */}
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           {/* Age tabs */}
           <div
             className="flex gap-1 rounded-lg bg-muted p-1"
@@ -637,7 +649,7 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
         )}
 
         {/* Summary bar */}
-        <div className="mt-[-12px] flex flex-wrap items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
+        <div className="flex flex-wrap items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
           <span className="text-sm font-bold tabular-nums">
             {displayStages[0] % 1 === 0
               ? displayStages[0]
@@ -652,12 +664,6 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
           </span>
           <span>euploid</span>
         </div>
-
-        {/* Sources */}
-        <p className="mt-3 text-center text-[10px] leading-relaxed text-muted-foreground/60">
-          Sources: SART national data · Demko et al. 2016 ·{" "}
-          <em>Fertility &amp; Sterility</em> PGT-A study (2021)
-        </p>
       </CardContent>
 
       {/* Tooltip — portal-style fixed div */}

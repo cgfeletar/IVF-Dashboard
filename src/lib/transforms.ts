@@ -482,9 +482,9 @@ export function transformConceptionTiming(
     if (p.dayRelativeToOvulation === 0) {
       label = "Ovulation";
     } else if (p.dayRelativeToOvulation > 0) {
-      label = `Day +${p.dayRelativeToOvulation}`;
+      label = `+${p.dayRelativeToOvulation}`;
     } else {
-      label = `Day ${p.dayRelativeToOvulation}`;
+      label = `${p.dayRelativeToOvulation}`;
     }
     return { label, probability: p.conceptionProbability, day: p.dayRelativeToOvulation };
   });

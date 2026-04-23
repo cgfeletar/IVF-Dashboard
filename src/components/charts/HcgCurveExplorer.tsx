@@ -294,7 +294,7 @@ export function HcgCurveExplorer({
 
   const chartElement = (
     <div
-      className="flex-1 min-h-[185px]"
+      className="flex-1"
       role="img"
       aria-label="Line chart showing hCG levels by days past ovulation with confidence bands"
     >
@@ -402,7 +402,7 @@ export function HcgCurveExplorer({
   // -- Bare mode: just the filter tabs + chart (no card, no input controls) --
   if (bare) {
     return (
-      <div className="space-y-1">
+      <div className="flex h-full flex-col gap-1">
         <div className="flex items-center justify-between gap-0">
           {!externalFilter && (
             <Tabs

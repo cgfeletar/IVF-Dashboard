@@ -1,127 +1,96 @@
-import { useState, useCallback } from "react";
 import { LayoutGroup } from "framer-motion";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DashboardPanel } from "@/components/dashboard/DashboardPanel";
 import { SuccessRatesByAge } from "@/components/charts/SuccessRatesByAge";
 import { HcgWorkbench } from "@/components/charts/HcgWorkbench";
 import { MiscarriageRiskChart } from "@/components/charts/MiscarriageRiskChart";
 import { DpoTestAccuracy } from "@/components/charts/DpoTestAccuracy";
 import { ConceptionTimingChart } from "@/components/charts/ConceptionTimingChart";
+
 import { IvfAttritionSankey } from "@/components/charts/IvfAttritionSankey";
+import { ClinicExplorer } from "@/components/charts/ClinicExplorer";
 import { QuickStats } from "@/components/charts/QuickStats";
 
-
-/*
- * Puzzle grid with embedded header.
- *
- * Clicking a panel expands it as a fixed overlay at ~90 % of the viewport.
- * Click the backdrop or the panel again to collapse.
- */
-
-type PanelId =
-  | "sankey"
-  | "success"
-  | "conception"
-  | "dpo"
-  | "hcg"
-  | "miscarriage";
-
 export default function DashboardPage() {
-  const [expandedId, setExpandedId] = useState<PanelId | null>(null);
-
-  const toggle = useCallback(
-    (id: PanelId) => setExpandedId((prev) => (prev === id ? null : id)),
-    [],
-  );
-
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-gradient-to-b from-background to-muted/30">
-      <LayoutGroup>
-        <main
-          className="puzzle-grid flex-1 min-h-0 gap-3 p-3"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1.2fr 2fr",
-            gridTemplateRows: "0.9fr 0.3fr 1fr 0.8fr",
-            gridTemplateAreas: `
-              "sankey      header      conception"
-              "sankey      header      hcg"
-              "dpo         quickstats  hcg"
-              "miscarriage miscarriage hcg"
-            `,
-          }}
+      {/* Header */}
+      <div className="flex items-center justify-center px-5 py-4">
+        <div className="text-center">
+          <h1 className="text-lg font-semibold tracking-tight leading-tight">
+            IVF & Fertility Dashboard
+          </h1>
+        </div>
+      </div>
+
+      <Tabs defaultValue="ttc" className="flex-1 min-h-0 px-3 pb-3">
+        <TabsList className="mx-auto">
+          <TabsTrigger value="ttc">Trying to Conceive</TabsTrigger>
+          <TabsTrigger value="pregnancy">Pregnancy</TabsTrigger>
+          <TabsTrigger value="ivf">IVF</TabsTrigger>
+        </TabsList>
+
+        {/* ── Trying to Conceive ── */}
+        <TabsContent
+          value="ttc"
+          className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden"
         >
-          {/* Row 0 */}
-          <DashboardPanel
-            index={0}
-            className="[grid-area:sankey]"
-            isExpanded={expandedId === "sankey"}
-            onClick={() => toggle("sankey")}
-          >
-            <IvfAttritionSankey />
-          </DashboardPanel>
+          <LayoutGroup id="ttc">
+            <main className="grid h-full grid-cols-1 gap-3 md:grid-cols-2">
+              <DashboardPanel index={0} className="min-h-[300px] md:min-h-0">
+                <ConceptionTimingChart />
+              </DashboardPanel>
 
-          <div className="flex flex-col gap-3 [grid-area:header]">
-            {/* Inline header */}
-            <div className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-[hsl(170,24%,42%)] to-[hsl(170,30%,32%)] px-5 py-4 text-white">
-              <h1 className="text-lg font-semibold tracking-tight leading-tight">
-                IVF & Fertility Dashboard
-              </h1>
-              <p className="text-xs text-white/70 leading-tight">
-                Click any panel to expand it.
-              </p>
-            </div>
-            <DashboardPanel
-              index={1}
-              className="flex-1 min-h-0"
-              isExpanded={expandedId === "success"}
-              onClick={() => toggle("success")}
-            >
-              <SuccessRatesByAge />
-            </DashboardPanel>
-          </div>
+              <DashboardPanel index={1} className="min-h-[400px] md:min-h-0">
+                <DpoTestAccuracy />
+              </DashboardPanel>
+            </main>
+          </LayoutGroup>
+        </TabsContent>
 
-          <DashboardPanel
-            index={2}
-            className="[grid-area:conception]"
-            isExpanded={expandedId === "conception"}
-            onClick={() => toggle("conception")}
-          >
-            <ConceptionTimingChart />
-          </DashboardPanel>
+        {/* ── Pregnancy ── */}
+        <TabsContent
+          value="pregnancy"
+          className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden"
+        >
+          <LayoutGroup id="pregnancy">
+            <main className="grid h-full grid-cols-1 gap-3 md:grid-cols-2">
+              <DashboardPanel index={0} className="min-h-[500px] md:min-h-0">
+                <HcgWorkbench />
+              </DashboardPanel>
 
-          {/* Row 1–2 */}
-          <DashboardPanel
-            index={3}
-            className="[grid-area:dpo]"
-            isExpanded={expandedId === "dpo"}
-            onClick={() => toggle("dpo")}
-          >
-            <DpoTestAccuracy />
-          </DashboardPanel>
+              <DashboardPanel index={1} className="min-h-[400px] md:min-h-0">
+                <MiscarriageRiskChart />
+              </DashboardPanel>
+            </main>
+          </LayoutGroup>
+        </TabsContent>
 
-          <div className="[grid-area:quickstats] flex items-start">
-            <QuickStats />
-          </div>
+        {/* ── IVF ── */}
+        <TabsContent
+          value="ivf"
+          className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden"
+        >
+          <LayoutGroup id="ivf">
+            <main className="grid h-full grid-cols-1 gap-3 md:grid-cols-2 md:grid-rows-2">
+              <DashboardPanel
+                index={0}
+                className="min-h-[400px] md:min-h-0 md:row-span-2"
+              >
+                <IvfAttritionSankey />
+              </DashboardPanel>
 
-          <DashboardPanel
-            index={4}
-            className="[grid-area:hcg]"
-            isExpanded={expandedId === "hcg"}
-            onClick={() => toggle("hcg")}
-          >
-            <HcgWorkbench />
-          </DashboardPanel>
+              <DashboardPanel index={1} className="min-h-[300px] md:min-h-0">
+                <SuccessRatesByAge />
+              </DashboardPanel>
 
-          <DashboardPanel
-            index={5}
-            className="[grid-area:miscarriage]"
-            isExpanded={expandedId === "miscarriage"}
-            onClick={() => toggle("miscarriage")}
-          >
-            <MiscarriageRiskChart />
-          </DashboardPanel>
-        </main>
-      </LayoutGroup>
+              <DashboardPanel index={2} className="min-h-[400px] md:min-h-0">
+                <ClinicExplorer />
+              </DashboardPanel>
+            </main>
+          </LayoutGroup>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -13,9 +13,11 @@ import {
   Card,
   CardHeader,
   CardTitle,
+  CardAction,
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import { InfoTip } from "@/components/ui/info-tip";
 import { CHART_COLORS, PALETTE, NIVO_THEME } from "@/lib/constants";
 import { OVIA_CONCEPTION_DATA } from "@/lib/oviaConceptionData";
 import { transformConceptionTiming } from "@/lib/transforms";
@@ -26,7 +28,7 @@ import type { ConceptionTimingBarDatum } from "@/types/charts";
 // ---------------------------------------------------------------------------
 
 /** Labels for the peak fertile window bars — highlighted in teal */
-const PEAK_LABELS = new Set(["Day -2", "Day -1", "Ovulation"]);
+const PEAK_LABELS = new Set(["-2", "-1", "Ovulation"]);
 
 // ---------------------------------------------------------------------------
 // Custom tooltip
@@ -127,9 +129,14 @@ export function ConceptionTimingChart() {
         <CardTitle className="tracking-tight">
           Conception Probability by Day of Intercourse
         </CardTitle>
+        <CardAction>
+          <InfoTip>
+            <p className="font-medium">Source</p>
+            <p>Ovia Health (2019) — large cohort analysis of conception probability by day of intercourse relative to ovulation.</p>
+          </InfoTip>
+        </CardAction>
         <CardDescription>
           Likelihood of conception per act of intercourse relative to ovulation
-          — Ovia Health study (2019)
         </CardDescription>
       </CardHeader>
 
@@ -196,7 +203,7 @@ export function ConceptionTimingChart() {
           />
         </div>
         <div className="flex flex-wrap items-center justify-center gap-2 rounded-lg bg-primary/10 px-4 py-1 text-xs font-medium text-primary">
-          Teal bars = peak fertile window (Day −2 through Ovulation)
+          Teal bars = peak fertile window (Day −2 - Ovulation)
         </div>
       </CardContent>
     </Card>
