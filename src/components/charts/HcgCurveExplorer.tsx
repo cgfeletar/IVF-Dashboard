@@ -300,7 +300,7 @@ export function HcgCurveExplorer({
     >
       <ResponsiveLine
         data={chartData}
-        margin={{ top: 0, right: 24, bottom: 56, left: 64 }}
+        margin={{ top: 28, right: 24, bottom: 56, left: 64 }}
         xScale={{ type: "linear", min: 10, max: xMax }}
         yScale={{ type: "linear", min: 0, max: yMax ?? "auto" }}
         curve="monotoneX"
@@ -315,6 +315,10 @@ export function HcgCurveExplorer({
         axisBottom={{
           tickSize: 4,
           tickPadding: 8,
+          tickValues: Array.from(
+            { length: Math.floor((xMax - 10) / 2) + 1 },
+            (_, i) => 10 + i * 2,
+          ),
           legend: "Days Past Ovulation (DPO)",
           legendOffset: 42,
           legendPosition: hasBetas ? "start" : "middle",
@@ -357,9 +361,9 @@ export function HcgCurveExplorer({
         )}
         legends={[
           {
-            anchor: "bottom-right",
+            anchor: "top-right",
             direction: "row",
-            translateY: 51,
+            translateY: -20,
             itemWidth: 140,
             itemHeight: 20,
             itemTextColor: NIVO_THEME.textColor,

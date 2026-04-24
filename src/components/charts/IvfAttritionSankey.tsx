@@ -270,29 +270,26 @@ function FunnelView({
   stageNames: string[];
 }) {
   const maxVal = stages[0];
-  const height = 230;
-  const barHeight = height / stageNames.length - 8;
-  const maxBarWidth = 100; // percentage
 
   return (
     <div
-      className="flex flex-col items-center gap-1 py-4"
+      className="flex flex-1 min-h-0 flex-col gap-1 py-1"
       role="img"
       aria-label="Funnel chart showing IVF egg attrition"
     >
       {stageNames.map((name, i) => {
         const value = stages[i];
-        const widthPct = (value / maxVal) * maxBarWidth;
+        const widthPct = (value / maxVal) * 100;
         const loss = i > 0 ? stages[i - 1] - value : 0;
         const lossPct = i > 0 ? Math.round((loss / stages[i - 1]) * 100) : 0;
 
         return (
           <div
             key={name}
-            className="group relative flex w-full items-center justify-center"
+            className="group flex flex-1 min-h-0 w-full items-center"
           >
-            {/* Loss annotation (left) */}
-            <div className="hidden w-24 text-right text-[11px] text-muted-foreground lg:block">
+            {/* Loss annotation (left, desktop only) */}
+            <div className="hidden w-24 shrink-0 text-right text-[11px] text-muted-foreground lg:block">
               {i > 0 && (
                 <span className="text-[#b5564a]">
                   −{loss % 1 === 0 ? loss : loss.toFixed(1)} ({lossPct}%)
@@ -301,12 +298,11 @@ function FunnelView({
             </div>
 
             {/* Funnel bar */}
-            <div className="relative mx-3 flex-1" style={{ maxWidth: 600 }}>
+            <div className="relative flex-1 px-2" style={{ maxWidth: 600 }}>
               <div
-                className="mx-auto flex items-center justify-center rounded-md transition-all duration-500"
+                className="mx-auto flex h-full min-h-[24px] items-center justify-center rounded-md transition-all duration-500"
                 style={{
                   width: `${widthPct}%`,
-                  height: barHeight,
                   backgroundColor:
                     i === stageNames.length - 1
                       ? PALETTE.teal
@@ -319,14 +315,9 @@ function FunnelView({
               </div>
             </div>
 
-            {/* Stage label + pct (right) */}
-            <div className="hidden w-32 text-[11px] lg:block">
+            {/* Stage label (always visible, smaller on mobile) */}
+            <div className="w-16 shrink-0 text-[10px] lg:w-32 lg:text-[11px]">
               <span className="font-medium text-foreground">{name}</span>
-            </div>
-
-            {/* Mobile: label below bar */}
-            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground lg:hidden">
-              {name}
             </div>
           </div>
         );
@@ -364,7 +355,7 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
     const container = svgEl.parentElement!;
     const width = Math.max(container.clientWidth, 400);
     const height = Math.max(container.clientHeight, 200);
-    const margin = { top: 28, right: 24, bottom: 32, left: 24 };
+    const margin = { top: 48, right: 24, bottom: 32, left: 24 };
 
     const svg = d3
       .select(svgEl)
@@ -400,7 +391,7 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
         g.append("text")
           .attr("text-anchor", "middle")
           .attr("x", ((n.x0 ?? 0) + (n.x1 ?? 0)) / 2)
-          .attr("y", margin.top - 10)
+          .attr("y", margin.top / 2)
           .attr("font-size", "11px")
           .attr("fill", "var(--color-muted-foreground, #78716c)")
           .attr("font-weight", 500)
@@ -513,10 +504,10 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
     }
   }, [ageKey, data, activeStages]);
 
-  // Render on mount + state changes
+  // Render on mount + state changes (viewMode triggers remount of the SVG)
   useEffect(() => {
     render();
-  }, [render]);
+  }, [render, viewMode]);
 
   // Re-render when the container resizes (covers window resize + tab switches)
   useEffect(() => {
@@ -546,7 +537,10 @@ export function IvfAttritionSankey({ className }: { className?: string } = {}) {
         <CardAction>
           <InfoTip>
             <p className="font-medium">Sources</p>
-            <p>SART national data; Demko et al. 2016; <em>Fertility &amp; Sterility</em> PGT-A study (2021).</p>
+            <p>
+              SART national data; Demko et al. 2016;{" "}
+              <em>Fertility &amp; Sterility</em> PGT-A study (2021).
+            </p>
           </InfoTip>
         </CardAction>
         <CardDescription>

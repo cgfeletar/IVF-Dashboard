@@ -267,7 +267,7 @@ export function MiscarriageRiskChart({
       </CardHeader>
 
       {/* Filters */}
-      <div className="grid grid-cols-4 gap-3 px-4 pb-2">
+      <div className="grid grid-cols-4 items-end gap-3 px-4 pb-2">
         {/* Maternal age slider */}
         <fieldset className="flex flex-col gap-1">
           <legend className="text-xs font-medium text-foreground mb-2">
@@ -446,6 +446,7 @@ export function MiscarriageRiskChart({
               axisLeft={{
                 tickSize: 4,
                 tickPadding: 8,
+                tickValues: 5,
                 legend: "Cumulative risk (%)",
                 legendOffset: -44,
                 legendPosition: "middle",

@@ -247,11 +247,13 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
                 </label>
                 <Input
                   id="wb-dpo-input"
-                  type="number"
-                  min={inputMin}
-                  max={inputMax}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder={`${inputMin}–${inputMax}`}
                   value={dpoInput}
                   onChange={(e) => setDpoInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddBeta()}
                   className="w-20"
                 />
               </div>
@@ -264,10 +266,12 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
                 </label>
                 <Input
                   id="wb-hcg-input"
-                  type="number"
-                  min={1}
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="e.g. 120"
                   value={hcgInput}
                   onChange={(e) => setHcgInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddBeta()}
                   className="w-28"
                 />
               </div>
@@ -285,7 +289,7 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
 
         {/* ── Stacked charts — flex to fill remaining space ── */}
         <div className="flex flex-1 min-h-0 flex-col gap-2">
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-[200px]">
             <HcgCurveExplorer
               bare
               hideControls
@@ -294,7 +298,7 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
             />
           </div>
 
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-[200px]">
             <HCGPredictor
               bare
               hideControls
