@@ -2,6 +2,8 @@
 
 A data visualization dashboard exploring real IVF and fertility datasets — CDC clinic outcomes, hCG reference curves, and evidence-based miscarriage risk modeling. Built to demonstrate full-stack data engineering from raw public APIs to interactive, chart-driven UI.
 
+Live site: https://fertilitydashboard.netlify.app/
+
 ## Screenshots
 
 ### Trying to Conceive
