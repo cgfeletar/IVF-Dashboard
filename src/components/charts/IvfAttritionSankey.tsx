@@ -273,7 +273,7 @@ function FunnelView({
 
   return (
     <div
-      className="flex flex-1 min-h-0 flex-col gap-1 py-1"
+      className="flex flex-1 min-h-0 flex-col gap-4 py-2"
       role="img"
       aria-label="Funnel chart showing IVF egg attrition"
     >
@@ -286,10 +286,10 @@ function FunnelView({
         return (
           <div
             key={name}
-            className="group flex flex-1 min-h-0 w-full items-center"
+            className="group flex flex-1 min-h-0 w-full items-stretch"
           >
             {/* Loss annotation (left, desktop only) */}
-            <div className="hidden w-24 shrink-0 text-right text-[11px] text-muted-foreground lg:block">
+            <div className="hidden w-24 shrink-0 items-center justify-end text-right text-[11px] text-muted-foreground lg:flex">
               {i > 0 && (
                 <span className="text-[#b5564a]">
                   −{loss % 1 === 0 ? loss : loss.toFixed(1)} ({lossPct}%)
@@ -298,9 +298,12 @@ function FunnelView({
             </div>
 
             {/* Funnel bar */}
-            <div className="relative flex-1 px-2" style={{ maxWidth: 600 }}>
+            <div
+              className="relative flex flex-1 items-stretch px-2"
+              style={{ maxWidth: 600 }}
+            >
               <div
-                className="mx-auto flex h-full min-h-[24px] items-center justify-center rounded-md transition-all duration-500"
+                className="mx-auto flex min-h-[24px] w-full items-center justify-center rounded-md transition-all duration-500"
                 style={{
                   width: `${widthPct}%`,
                   backgroundColor:
@@ -316,7 +319,7 @@ function FunnelView({
             </div>
 
             {/* Stage label (always visible, smaller on mobile) */}
-            <div className="w-16 shrink-0 text-[10px] lg:w-32 lg:text-[11px]">
+            <div className="flex w-16 shrink-0 items-center text-[10px] lg:w-32 lg:text-[11px]">
               <span className="font-medium text-foreground">{name}</span>
             </div>
           </div>
