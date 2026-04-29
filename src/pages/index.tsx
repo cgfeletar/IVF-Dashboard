@@ -6,6 +6,7 @@ import { HcgWorkbench } from "@/components/charts/HcgWorkbench";
 import { MiscarriageRiskChart } from "@/components/charts/MiscarriageRiskChart";
 import { DpoTestAccuracy } from "@/components/charts/DpoTestAccuracy";
 import { ConceptionTimingChart } from "@/components/charts/ConceptionTimingChart";
+import { DueDateCalculator } from "@/components/charts/DueDateCalculator";
 
 import { IvfAttritionSankey } from "@/components/charts/IvfAttritionSankey";
 
@@ -70,9 +71,21 @@ export default function DashboardPage() {
                 <HcgWorkbench />
               </DashboardPanel>
 
-              <DashboardPanel index={1} className="min-h-[400px] md:min-h-0">
-                <MiscarriageRiskChart />
-              </DashboardPanel>
+              <div className="flex flex-col gap-3 md:min-h-0">
+                <DashboardPanel
+                  index={1}
+                  className="min-h-[400px] md:min-h-0 md:flex-none"
+                >
+                  <DueDateCalculator />
+                </DashboardPanel>
+
+                <DashboardPanel
+                  index={2}
+                  className="min-h-[400px] md:min-h-0 md:flex-1"
+                >
+                  <MiscarriageRiskChart />
+                </DashboardPanel>
+              </div>
             </main>
           </LayoutGroup>
         </TabsContent>
