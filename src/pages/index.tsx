@@ -67,7 +67,10 @@ export default function DashboardPage() {
         >
           <LayoutGroup id="pregnancy">
             <main className="grid h-full grid-cols-1 gap-3 md:grid-cols-2">
-              <DashboardPanel index={0} className="min-h-[680px] md:min-h-0">
+              <DashboardPanel
+                index={0}
+                className="min-h-[650px] h-min md:min-h-0"
+              >
                 <HcgWorkbench />
               </DashboardPanel>
 

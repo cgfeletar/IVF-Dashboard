@@ -114,7 +114,7 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
   const hasBetas = userBetas.length > 0;
 
   return (
-    <Card className={[className, "h-full"].filter(Boolean).join(" ")}>
+    <Card className={[className, "md:h-full"].filter(Boolean).join(" ")}>
       <CardHeader>
         <CardTitle className="tracking-tight pb-3">hCG Workbench</CardTitle>
         <CardAction>
@@ -129,45 +129,47 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
         {/* ── Shared input controls ── */}
         <div className="space-y-2 rounded-lg border border-border/40 bg-muted/20 p-2">
           {/* Pregnancy type + curve filter */}
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="space-y-1.5">
-              <p className="text-xs font-medium text-muted-foreground">
-                Pregnancy type
-              </p>
-              <Tabs
-                value={pregnancyType}
-                onValueChange={handlePregnancyTypeChange}
-              >
-                <TabsList>
-                  <TabsTrigger value="natural" className="text-xs">
-                    Natural
-                  </TabsTrigger>
-                  <TabsTrigger value="ivf" className="text-xs">
-                    IVF transfer
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {pregnancyType === "ivf" && (
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="space-y-1.5">
                 <p className="text-xs font-medium text-muted-foreground">
-                  Embryo day
+                  Pregnancy type
                 </p>
-                <Tabs value={embryoDay} onValueChange={handleEmbryoDayChange}>
+                <Tabs
+                  value={pregnancyType}
+                  onValueChange={handlePregnancyTypeChange}
+                >
                   <TabsList>
-                    <TabsTrigger value="day3" className="text-xs">
-                      Day 3
+                    <TabsTrigger value="natural" className="text-xs">
+                      Natural
                     </TabsTrigger>
-                    <TabsTrigger value="day5" className="text-xs">
-                      Day 5/6/7
+                    <TabsTrigger value="ivf" className="text-xs">
+                      IVF transfer
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
-            )}
 
-            <div className="ml-auto space-y-0">
+              {pregnancyType === "ivf" && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Embryo day
+                  </p>
+                  <Tabs value={embryoDay} onValueChange={handleEmbryoDayChange}>
+                    <TabsList>
+                      <TabsTrigger value="day3" className="text-xs">
+                        Day 3
+                      </TabsTrigger>
+                      <TabsTrigger value="day5" className="text-xs">
+                        Day 5/6/7
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-0">
               <p className="text-xs font-medium text-muted-foreground">
                 Reference curves
               </p>
@@ -287,9 +289,9 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
           )}
         </div>
 
-        {/* ── Stacked charts — flex to fill remaining space ── */}
-        <div className="flex flex-1 min-h-0 flex-col gap-2">
-          <div className="flex-1 min-h-[200px]">
+        {/* ── Stacked charts — flex to fill remaining space (desktop only) ── */}
+        <div className="flex flex-col gap-2 md:flex-1 md:min-h-0">
+          <div className="h-[280px] shrink-0 md:h-auto md:min-h-[200px] md:shrink md:flex-1">
             <HcgCurveExplorer
               bare
               hideControls
@@ -298,7 +300,7 @@ export function HcgWorkbench({ className }: HcgWorkbenchProps) {
             />
           </div>
 
-          <div className="flex-1 min-h-[200px]">
+          <div className="h-[280px] shrink-0 md:h-auto md:min-h-[200px] md:shrink md:flex-1">
             <HCGPredictor
               bare
               hideControls
